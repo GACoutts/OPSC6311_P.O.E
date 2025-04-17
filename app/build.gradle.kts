@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("kotlin-kapt")
 }
 
 android {
@@ -46,13 +47,17 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    implementation(libs.androidx.camera.view)
-    implementation(libs.androidx.camera.lifecycle)
+    val room_version = "2.6.1"
 
-    implementation("androidx.room:room-runtime:2.7.0")
-    implementation("androidx.room:room-compiler:2.7.0")
-
-    implementation("androidx.room:room-ktx:2.7.0")
-    kapt("androidx.room:room-compiler:2.7.0")
+    //noinspection UseTomlInstead,GradleDependency
+    implementation("androidx.room:room-runtime:$room_version")
+    //noinspection UseTomlInstead,GradleDependency
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+    // To use Kotlin Symbol Processing (KSP)
+    //noinspection UseTomlInstead,KaptUsageInsteadOfKsp,GradleDependency
+    kapt("androidx.room:room-compiler:$room_version")
+    // optional - Kotlin Extensions and Coroutines support for Room
+    //noinspection UseTomlInstead,GradleDependency
+    implementation("androidx.room:room-ktx:$room_version")
 
 }
