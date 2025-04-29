@@ -6,10 +6,19 @@
     <string name="hint_notes">Notes</string>
     <string name="hint_image">Upload An Image</string>
     <string name="hint_date">Date</string>
+    <string name="hint_initial_amount">- R0.00</string>
+    <string name="hint_positive_amount">R0.00</string>
+    <string name="hint_expense">Expense</string>
+    <string name="hint_income">Income</string>
 
-    <!-- Content descriptions for ImageView icons -->
+    <!-- Content descriptions -->
     <string name="cd_calendar_icon">Calendar icon representing the date selection</string>
     <string name="cd_shop_icon">Shop icon representing the category selection</string>
     <string name="cd_notes_icon">Notes icon representing the notes input</string>
     <string name="cd_wallet_icon">Wallet icon representing the account selection</string>
+
+    <string name="cd_previous_page">Return to previous page</string>
+    <string name="cd_confirm">Confirm selection</string>
+    <string name="cd_change_value">Change from income to expense and vice versa</string>
+
 </resources>
