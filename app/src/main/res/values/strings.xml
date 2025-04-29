@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">Supa_Budg</string>
+
+    <!-- Add Income Expense Page -->
+    <string name="hint_category">Category</string>
+    <string name="hint_notes">Notes</string>
+    <string name="hint_image">Upload An Image</string>
+    <string name="hint_date">Date</string>
+
+    <!-- Content descriptions for ImageView icons -->
+    <string name="cd_calendar_icon">Calendar icon representing the date selection</string>
+    <string name="cd_shop_icon">Shop icon representing the category selection</string>
+    <string name="cd_notes_icon">Notes icon representing the notes input</string>
+    <string name="cd_wallet_icon">Wallet icon representing the account selection</string>
 </resources>
