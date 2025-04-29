@@ -16,9 +16,6 @@
             android:name=".progress_Dashboard"
             android:exported="false" />
         <activity
-            android:name=".add_entry"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
