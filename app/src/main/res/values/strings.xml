@@ -4,7 +4,7 @@
     <!-- Add Income Expense Page -->
     <string name="hint_category">Category</string>
     <string name="hint_notes">Notes</string>
-    <string name="hint_image">Upload An Image</string>
+    <string name="hint_image">Attach Photo</string>
     <string name="hint_date">Date</string>
     <string name="hint_initial_amount">- R0.00</string>
     <string name="hint_positive_amount">R0.00</string>

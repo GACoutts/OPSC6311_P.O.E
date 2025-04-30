@@ -6,16 +6,18 @@
     android:layout_height="match_parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="409dp"
-        android:layout_height="729dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        android:fitsSystemWindows="true"
+        >
 
         <RelativeLayout
             android:id="@+id/relativeLayout"
-            android:layout_width="409dp"
+            android:layout_width="0dp"
             android:layout_height="132dp"
             android:background="#333e6a"
             android:padding="20dp"
@@ -54,7 +56,8 @@
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
                 android:background="@color/white"
-                android:text="@string/hint_expense"
+                android:textOn="@string/hint_income"
+                android:textOff="@string/hint_expense"
                 android:contentDescription="@string/cd_confirm"
                 />
 
@@ -71,10 +74,131 @@
                 android:layout_marginTop="6dp"
                 android:contentDescription="@string/cd_change_value"
                 />
-
-
-
         </RelativeLayout>
 
+        <LinearLayout
+            android:id="@+id/formSection"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="12dp"
+            app:layout_constraintTop_toBottomOf="@id/relativeLayout"
+            >
+
+            <!-- Date Row -->
+            <LinearLayout
+                android:id="@+id/calender"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/calender"
+                    android:contentDescription="@string/cd_calendar_icon" />
+
+                <TextView
+                    android:id="@+id/dateText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:text=""
+                    android:textColor="#000000"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Category -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/shop"
+                    android:contentDescription="@string/cd_shop_icon"
+                    />
+
+                <TextView
+                    android:id="@+id/category"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/hint_category"
+                    android:textSize="16sp"
+                    android:textColor="#000000"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
+            <!-- Notes -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/notes"
+                    android:contentDescription="@string/cd_notes_icon"
+                    />
+
+                <EditText
+                    android:id="@+id/notes"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="@string/hint_notes"
+                    android:textSize="16sp"
+                    android:textColor="#000000"
+                    android:inputType="textMultiLine"
+                    android:maxLines="1"
+                    android:background="@null"
+                    android:maxLength="50"
+                    android:autofillHints=""
+                    />
+            </LinearLayout>
+
+            <!-- Attach Photo -->
+            <LinearLayout
+                android:id="@+id/attachPhotoRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:orientation="horizontal"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/image"
+                android:contentDescription="@string/cd_calendar_icon"
+                />
+
+            <TextView
+                android:id="@+id/attachPhoto"
+                android:layout_marginStart="12dp"
+                android:text="@string/hint_image"
+                android:layout_marginTop="12dp"
+                android:textSize="16sp"
+                android:textColor="#000000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+    </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
