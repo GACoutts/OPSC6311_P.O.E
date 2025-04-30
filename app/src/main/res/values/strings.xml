@@ -11,6 +11,8 @@
     <string name="hint_expense">Expense</string>
     <string name="hint_income">Income</string>
 
+    <string name="hint_total">Total</string>
+
     <!-- Content descriptions -->
     <string name="cd_calendar_icon">Calendar icon representing the date selection</string>
     <string name="cd_shop_icon">Shop icon representing the category selection</string>
