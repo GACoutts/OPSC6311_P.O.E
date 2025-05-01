@@ -5,6 +5,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.ToggleButton
@@ -29,11 +31,18 @@ class AddEntry : AppCompatActivity() {
 
         // Get Fields
         val toggleButton = findViewById<ToggleButton>(R.id.toggleButton)
-        val textView = findViewById<TextView>(R.id.amount)
+        val amountPrefix = findViewById<TextView>(R.id.currencyPrefix)
+        val amountInput = findViewById<EditText>(R.id.amountInput)
         dateText = findViewById(R.id.dateText)
+
         val calendarRow = findViewById<LinearLayout>(R.id.calender)
         val attachPhotoRow = findViewById<LinearLayout>(R.id.attachPhotoRow)
         attachPhotoText = findViewById(R.id.attachPhoto)
+
+        val backButton = findViewById<ImageButton>(R.id.backButton)
+
+        val amountText = amountInput.text.toString()
+        val amount = amountText.toDoubleOrNull() ?: 0.0
 
         var isExpense = true
 
@@ -49,11 +58,11 @@ class AddEntry : AppCompatActivity() {
         toggleButton.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 toggleButton.text = getString(R.string.hint_income)
-                textView.text = getString(R.string.hint_positive_amount)
+                amountPrefix.text = "R"
                 isExpense = false
             } else {
                 toggleButton.text = getString(R.string.hint_expense)
-                textView.text = getString(R.string.hint_initial_amount)
+                amountPrefix.text = "- R"
                 isExpense = true
             }
         }
@@ -96,6 +105,13 @@ class AddEntry : AppCompatActivity() {
                 view.paddingBottom
             )
             insets
+        }
+
+        backButton.setOnClickListener {
+            val intent = Intent(this, Dashboard::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
         }
     }
 
