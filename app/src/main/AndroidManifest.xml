@@ -18,23 +18,27 @@
             android:exported="false" />
 
         <activity
+            android:name=".Footer"
+            android:exported="false" />
+
+        <activity
             android:name=".Dashboard"
             android:exported="false" />
 
         <activity
             android:name=".EntryCalender"
-            android:exported="false" />
-
-
-        <activity
-            android:name=".AddEntry"
-            android:exported="true"
-            >
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
+        <activity
+            android:name=".AddEntry"
+            android:exported="false"
+            />
 
         <activity
             android:name=".MainActivity"
