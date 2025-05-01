@@ -12,27 +12,31 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Supa_Budg"
         tools:targetApi="31">
-        <activity
-            android:name=".category_view"
-            android:exported="false" />
-        <activity
-            android:name=".setting_monthly_budget"
-            android:exported="false" />
+
         <activity
             android:name=".progress_Dashboard"
             android:exported="false" />
+
+        <activity
+            android:name=".EntryCalender"
+            android:exported="false"
+            />
+
+
         <activity
             android:name=".AddEntry"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:exported="true"
+            >
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+             <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
         </activity>
+
         <activity
             android:name=".MainActivity"
             android:exported="false" />
+
     </application>
 
 </manifest>
