@@ -18,6 +18,23 @@
             android:exported="false" />
 
         <activity
+            android:name=".AddCategory"
+            android:exported="true" >
+                <intent-filter>
+                    <action android:name="android.intent.action.MAIN" />
+                    <category android:name="android.intent.category.LAUNCHER" />
+                </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".Signup"
+            android:exported="false" />
+
+        <activity
+            android:name=".Login"
+            android:exported="false" />
+
+        <activity
             android:name=".Footer"
             android:exported="false" />
 
@@ -27,13 +44,7 @@
 
         <activity
             android:name=".EntryCalender"
-            android:exported="true" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
+            android:exported="false" />
 
         <activity
             android:name=".AddEntry"

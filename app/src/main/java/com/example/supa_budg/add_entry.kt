@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import android.widget.ToggleButton
 import androidx.appcompat.app.AppCompatActivity
 import java.text.SimpleDateFormat
@@ -16,6 +17,12 @@ import java.util.Calendar
 import java.util.Locale
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.supa_budg.data.AppDatabase
+import com.example.supa_budg.data.Entry
+import com.example.supa_budg.data.EntryDao
+import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 import java.util.Date
 
 class AddEntry : AppCompatActivity() {
@@ -40,6 +47,7 @@ class AddEntry : AppCompatActivity() {
         attachPhotoText = findViewById(R.id.attachPhoto)
 
         val backButton = findViewById<ImageButton>(R.id.backButton)
+        val checkButton = findViewById<ImageButton>(R.id.checkButton)
 
         val amountText = amountInput.text.toString()
         val amount = amountText.toDoubleOrNull() ?: 0.0
@@ -112,6 +120,40 @@ class AddEntry : AppCompatActivity() {
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
             finish()
+        }
+
+        checkButton.setOnClickListener {
+            val amountText = amountInput.text.toString()
+            val amount = amountText.toDoubleOrNull()?.toInt() ?: 0
+            val notes = findViewById<EditText>(R.id.notes).text.toString()
+            val selectedDate = SimpleDateFormat("MMM dd yyyy", Locale.getDefault()).parse(dateText.text.toString())
+            val localDate = selectedDate?.toInstant()?.atZone(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: LocalDateTime.now()
+
+            // Replace with actual selected category id
+            val categoryId = 1
+
+            val photoUri = attachPhotoText.text.toString().takeIf { it != getString(R.string.hint_image) }
+
+            val newEntry = Entry(
+                amount = amount,
+                date = localDate,
+                categoryid = categoryId,
+                notes = notes,
+                photoUri = photoUri,
+                isExpense = isExpense
+            )
+
+            val db = AppDatabase.getDatabase(applicationContext)
+            val entryDao = db.entryDao()
+
+            // Save to DB
+            lifecycleScope.launch {
+                entryDao.insertEntry(newEntry)
+                runOnUiThread {
+                    Toast.makeText(this@AddEntry, "Entry saved!", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
         }
     }
 

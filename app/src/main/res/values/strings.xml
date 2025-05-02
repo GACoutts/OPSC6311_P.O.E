@@ -1,5 +1,26 @@
 <resources>
-    <string name="app_name">Supa_Budg</string>
+    <string name="app_name">Supa Budg</string>
+
+    <!-- Login and Signup page -->
+    <string name="welcome">Welcome back!</string>
+    <string name="new_user_signup">Welcome To The All In One Budget App!</string>
+    <string name="username">Username</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="signup">Sign Up</string>
+    <string name="have_an_account">Already have an account?</string>
+    <string name="successful_register">User registered successfully!</string>
+
+    <!-- Login and Signup errors -->
+    <string name="error_message">Error message</string>
+    <string name="error_username_length">Username must be more than 3 characters.</string>
+    <string name="error_username_exists">Username already exists.</string>
+    <string name="error_invalid_email">Invalid email format.</string>
+    <string name="error_email_exists">Email already registered.</string>
+    <string name="error_password_requirements">Password must be at least 5 characters and include a number.</string>
+    <string name="error_invalid_login">Invalid username or password</string>
 
     <!-- Add Income Expense Page -->
     <string name="hint_category">Category</string>
@@ -11,7 +32,6 @@
     <string name="hint_negative_rand">- R</string>
     <string name="hint_expense">Expense</string>
     <string name="hint_income">Income</string>
-
     <string name="hint_total">Total</string>
 
     <!-- Content descriptions -->

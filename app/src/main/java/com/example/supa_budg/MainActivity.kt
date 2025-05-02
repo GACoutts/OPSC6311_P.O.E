@@ -38,16 +38,16 @@ class MainActivity : AppCompatActivity() {
         buttonSave = findViewById(R.id.buttonSave)
         textViewUsers = findViewById(R.id.textViewUsers)
 
-        buttonSave.setOnClickListener(){
-            val name = editTextName.text.toString()
-            if(name.isNotBlank()){
-                lifecycleScope.launch {
-                    userDao.insert(User(name = name))
-                    showUsers()
-                }
-                editTextName.text.clear()
-            }
-        }
+//        buttonSave.setOnClickListener(){
+//            val name = editTextName.text.toString()
+//            if(name.isNotBlank()){
+//                lifecycleScope.launch {
+//                    userDao.insert(User(name = name, password = ))
+//                    showUsers()
+//                }
+//                editTextName.text.clear()
+//            }
+//        }
         lifecycleScope.launch {
             showUsers()
         }
