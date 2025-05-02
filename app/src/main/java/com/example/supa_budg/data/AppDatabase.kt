@@ -7,22 +7,26 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
 
-@Database(entities = [User::class,Category::class,Entry::class], version = 2)
+@Database(entities = [User::class, Category::class, Entry::class], version = 2)
 @TypeConverters(TimeConversionClass::class)
-abstract class AppDatabase : RoomDatabase(){
+abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
-    abstract fun CategoryDao(): CategoryDao
+    abstract fun categoryDao(): CategoryDao
+    abstract fun entryDao(): EntryDao
 
-    companion object{
+    companion object {
         @Volatile private var INSTANCE: AppDatabase? = null
 
-        fun getDatabase(context: Context): AppDatabase{
-            return INSTANCE ?: synchronized(this){
+        fun getDatabase(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
                 Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "user_database"
-                ).build().also { INSTANCE = it }
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+                    .also { INSTANCE = it }
             }
         }
     }
