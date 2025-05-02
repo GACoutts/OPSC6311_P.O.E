@@ -1,5 +1,13 @@
 <resources>
-    <string name="app_name">Supa_Budg</string>
+    <string name="app_name">Supa Budg</string>
+    <!-- Login and Signup page-->
+    <string name="welcome">Welcome back!</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="signup">Sign Up</string>
+
 
     <!-- Add Income Expense Page -->
     <string name="hint_category">Category</string>
@@ -11,7 +19,6 @@
     <string name="hint_negative_rand">- R</string>
     <string name="hint_expense">Expense</string>
     <string name="hint_income">Income</string>
-
     <string name="hint_total">Total</string>
 
     <!-- Content descriptions -->
