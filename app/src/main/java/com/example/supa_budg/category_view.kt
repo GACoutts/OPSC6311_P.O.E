@@ -9,6 +9,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.supa_budg.data.Category
+import com.example.supa_budg.data.AppDatabase
+import androidx.lifecycle.Observer
+import com.example.supa_budg.data.CategoryDao
+
 
 class category_view : AppCompatActivity() {
 
@@ -97,10 +102,10 @@ private fun setupCategorySpinner() {
 
     private fun loadCategoriesFromDB() {
         val db = AppDatabase.getDatabase(this)
-        db.categoryDao().getAllCategories().observe(this, Observer { cats ->
+        db.CategoryDao().getAllCategories().observe(this, Observer { cats ->
             categories = cats
             val names = cats.map { it.name }
-            val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, names)
+            val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, names.toMutableList())
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             categorySpinner.adapter = adapter
         })
