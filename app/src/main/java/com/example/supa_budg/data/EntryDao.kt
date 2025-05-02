@@ -32,4 +32,11 @@ interface EntryDao {
 
     @Delete
     suspend fun deleteEntry(entry: Entry)
+
+    @Query("SELECT SUM(amount) FROM Entry WHERE date BETWEEN :start AND :end")
+    suspend fun getTotalAmountFromDate(start: String, end: String): Double?
+
+    @Query("SELECT SUM(amount) FROM Entry")
+    suspend fun getTotalAmount(): Double?
+
 }

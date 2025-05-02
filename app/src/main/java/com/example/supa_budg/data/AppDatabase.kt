@@ -12,6 +12,7 @@ import androidx.room.TypeConverters
 abstract class AppDatabase : RoomDatabase(){
     abstract fun userDao(): UserDao
     abstract fun CategoryDao(): CategoryDao
+    abstract fun EntryDao(): EntryDao
 
     companion object{
         @Volatile private var INSTANCE: AppDatabase? = null
