@@ -15,9 +15,12 @@ class category_view : AppCompatActivity() {
     private lateinit var categorySpinner: Spinner
     private lateinit var timeFrameButton: Button
     private lateinit var amountText: TextView
+    private lateinit var confirmButton: Button
     private lateinit var dateCalendarIcon: ImageView
 
     private val calendar = Calendar.getInstance()
+    private var categories: List<Category> = emptyList()
+    private var selectedCategory: Category? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,23 +34,38 @@ class category_view : AppCompatActivity() {
         }
 
         setupViews()
-        setupCategorySpinner()
         setupCalendarButton()
+        loadCategoriesFromDB()
     }
 
     private fun setupViews() {
         categorySpinner = findViewById(R.id.category_spinner)
         timeFrameButton = findViewById(R.id.time_frame_button)
         amountText = findViewById(R.id.amount_text)
+        confirmButton = findViewById(R.id.confirm_button) // Add this to XML
         dateCalendarIcon = findViewById(R.id.calendar_icon)
-    }
 
-    private fun setupCategorySpinner() {
+        confirmButton.setOnClickListener {
+            val selectedIndex = categorySpinner.selectedItemPosition
+            selectedCategory = categories.getOrNull(selectedIndex)
+
+            if (selectedCategory != null) {
+                val remainingAmount = selectedCategory!!.amount // TODO: subtract expenses in range
+                amountText.text = "Remaining: R$remainingAmount"
+            } else {
+                amountText.text = "No category selected."
+            }
+        }
+    }
+/*
+private fun setupCategorySpinner() {
         val categories = listOf("Food", "Transport", "Utilities", "Entertainment", "Misc")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         categorySpinner.adapter = adapter
     }
+ */
+
 
     private fun setupCalendarButton() {
         val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
@@ -75,6 +93,17 @@ class category_view : AppCompatActivity() {
     private fun updateDateInView() {
         val format = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
         timeFrameButton.text = format.format(calendar.time)
+    }
+
+    private fun loadCategoriesFromDB() {
+        val db = AppDatabase.getDatabase(this)
+        db.categoryDao().getAllCategories().observe(this, Observer { cats ->
+            categories = cats
+            val names = cats.map { it.name }
+            val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, names)
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            categorySpinner.adapter = adapter
+        })
     }
 }
 // need button to confirm selection
