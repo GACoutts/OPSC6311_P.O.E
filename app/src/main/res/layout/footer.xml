@@ -2,8 +2,17 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    >
+    <View
+        android:id="@+id/footerTopBorder"
+        android:layout_width="0dp"
+        android:layout_height="0.5dp"
+        android:background="#e3e3e3"
+        app:layout_constraintBottom_toTopOf="@id/footerLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
     <LinearLayout
         android:id="@+id/footerLayout"
         android:layout_width="0dp"
@@ -20,21 +29,21 @@
 
         <!-- Footer Item 1 -->
         <ImageButton
-            android:id="@+id/footerBtn1"
+            android:id="@+id/footerHome"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginHorizontal="6dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/calender"
+            android:src="@drawable/home"
             android:scaleType="centerInside"
             android:contentDescription="Home" />
 
         <!-- Footer Item 2 -->
         <ImageButton
-            android:id="@+id/footerBtn2"
+            android:id="@+id/footerCalender"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginHorizontal="6dp"
             android:background="?attr/selectableItemBackgroundBorderless"
@@ -44,25 +53,25 @@
 
         <!-- Footer Item 3 -->
         <ImageButton
-            android:id="@+id/footerBtn3"
+            android:id="@+id/footerGraph"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginHorizontal="6dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/calender"
+            android:src="@drawable/graph"
             android:scaleType="centerInside"
             android:contentDescription="Graph" />
 
         <!-- Footer Item 4 -->
         <ImageButton
-            android:id="@+id/footerBtn4"
+            android:id="@+id/footerBudget"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginHorizontal="6dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/calender"
+            android:src="@drawable/money"
             android:scaleType="centerInside"
             android:contentDescription="Profile" />
     </LinearLayout>
