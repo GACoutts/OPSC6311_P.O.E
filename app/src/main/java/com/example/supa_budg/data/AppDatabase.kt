@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
 
-@Database(entities = [User::class, Category::class, Entry::class], version = 2)
+@Database(entities = [User::class, Category::class, Entry::class], version = 3)
 @TypeConverters(TimeConversionClass::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao

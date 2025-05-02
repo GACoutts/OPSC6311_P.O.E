@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class Category(
     @PrimaryKey(autoGenerate = true) val categoryid: Int = 0,
     val name: String,
-    val amount: Int
+    val imageUrl: String,
+    val goal: Int
 )
