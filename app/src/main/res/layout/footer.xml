@@ -61,7 +61,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/graph"
             android:scaleType="centerInside"
-            android:contentDescription="Graph" />
+            android:contentDescription="Add Catgory" />
 
         <!-- Footer Item 4 -->
         <ImageButton

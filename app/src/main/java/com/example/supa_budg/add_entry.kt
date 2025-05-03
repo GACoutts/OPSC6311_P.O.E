@@ -1,5 +1,6 @@
 package com.example.supa_budg
 
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.net.Uri
@@ -40,17 +41,22 @@ class AddEntry : AppCompatActivity() {
         val toggleButton = findViewById<ToggleButton>(R.id.toggleButton)
         val amountPrefix = findViewById<TextView>(R.id.currencyPrefix)
         val amountInput = findViewById<EditText>(R.id.amountInput)
-        dateText = findViewById(R.id.dateText)
-
-        val calendarRow = findViewById<LinearLayout>(R.id.calender)
-        val attachPhotoRow = findViewById<LinearLayout>(R.id.attachPhotoRow)
-        attachPhotoText = findViewById(R.id.attachPhoto)
-
+        val categoryTextView = findViewById<TextView>(R.id.category)
+        val errorText = findViewById<TextView>(R.id.errorText)
         val backButton = findViewById<ImageButton>(R.id.backButton)
         val checkButton = findViewById<ImageButton>(R.id.checkButton)
+        val calendarRow = findViewById<LinearLayout>(R.id.calender)
+        val attachPhotoRow = findViewById<LinearLayout>(R.id.attachPhotoRow)
+        dateText = findViewById(R.id.dateText)
+        attachPhotoText = findViewById(R.id.attachPhoto)
 
+        // Amount field
         val amountText = amountInput.text.toString()
         val amount = amountText.toDoubleOrNull() ?: 0.0
+
+        // Database fields
+        val db = AppDatabase.getDatabase(applicationContext)
+        val categoryDao = db.categoryDao()
 
         var isExpense = true
 
@@ -122,36 +128,111 @@ class AddEntry : AppCompatActivity() {
             finish()
         }
 
+        // Submit an enityy
         checkButton.setOnClickListener {
             val amountText = amountInput.text.toString()
             val amount = amountText.toDoubleOrNull()?.toInt() ?: 0
             val notes = findViewById<EditText>(R.id.notes).text.toString()
-            val selectedDate = SimpleDateFormat("MMM dd yyyy", Locale.getDefault()).parse(dateText.text.toString())
-            val localDate = selectedDate?.toInstant()?.atZone(java.time.ZoneId.systemDefault())?.toLocalDateTime() ?: LocalDateTime.now()
-
-            // Replace with actual selected category id
-            val categoryId = 1
-
+            val selectedDateStr = dateText.text.toString()
+            val selectedDate = SimpleDateFormat("MMM dd yyyy", Locale.getDefault()).parse(selectedDateStr)
             val photoUri = attachPhotoText.text.toString().takeIf { it != getString(R.string.hint_image) }
+            val selectedCategory = categoryTextView.text.toString()
 
-            val newEntry = Entry(
-                amount = amount,
-                date = localDate,
-                categoryid = categoryId,
-                notes = notes,
-                photoUri = photoUri,
-                isExpense = isExpense
-            )
+            // Validation
+            when {
+                amount <= 0 -> {
+                    errorText.text = "Please enter a valid amount greater than 0."
+                    errorText.setTextColor(getColor(R.color.red))
+                    errorText.visibility = TextView.VISIBLE
+                    return@setOnClickListener
+                }
 
-            val db = AppDatabase.getDatabase(applicationContext)
-            val entryDao = db.entryDao()
+                selectedDate == null -> {
+                    errorText.text = "Please select a valid date."
+                    errorText.setTextColor(getColor(R.color.red))
+                    errorText.visibility = TextView.VISIBLE
+                    return@setOnClickListener
+                }
 
-            // Save to DB
+                selectedCategory == getString(R.string.hint_category) -> {
+                    errorText.text = "Please select a category."
+                    errorText.setTextColor(getColor(R.color.red))
+                    errorText.visibility = TextView.VISIBLE
+                    return@setOnClickListener
+                }
+
+                photoUri == null -> {
+                    errorText.text = "Please attach a photo."
+                    errorText.setTextColor(getColor(R.color.red))
+                    errorText.visibility = TextView.VISIBLE
+                    return@setOnClickListener
+                }
+            }
+
+            // All validations passed
+            errorText.visibility = TextView.GONE
+
+            val localDate = selectedDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+
             lifecycleScope.launch {
+                val categories = categoryDao.getAllCategoriesNow()
+                val category = categories.find { it.name == selectedCategory }
+
+                if (category == null) {
+                    runOnUiThread {
+                        errorText.text = "Selected category not found."
+                        errorText.setTextColor(getColor(R.color.red))
+                        errorText.visibility = TextView.VISIBLE
+                    }
+                    return@launch
+                }
+
+                val newEntry = Entry(
+                    amount = amount,
+                    date = localDate,
+                    categoryid = category.categoryid,
+                    notes = notes,
+                    photoUri = photoUri,
+                    isExpense = isExpense
+                )
+
+                val entryDao = db.entryDao()
                 entryDao.insertEntry(newEntry)
+
                 runOnUiThread {
                     Toast.makeText(this@AddEntry, "Entry saved!", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this@AddEntry, Dashboard::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                    startActivity(intent)
                     finish()
+                }
+            }
+        }
+
+
+        // Select category modal
+        categoryTextView.setOnClickListener {
+            lifecycleScope.launch {
+                val categories = categoryDao.getAllCategoriesNow()
+
+                if (categories.isEmpty()) {
+                    runOnUiThread {
+                        errorText.text = "Please add a category first."
+                        errorText.setTextColor(getColor(R.color.red))
+                        errorText.visibility = TextView.VISIBLE
+                    }
+                } else {
+                    val categoryNames = categories.map { it.name }.toTypedArray()
+
+                    runOnUiThread {
+                        val builder = AlertDialog.Builder(this@AddEntry)
+                        builder.setTitle("Select Category")
+                        builder.setItems(categoryNames) { _, which ->
+                            categoryTextView.text = categoryNames[which]
+                            errorText.visibility = TextView.GONE
+                        }
+                        builder.show()
+                    }
                 }
             }
         }
