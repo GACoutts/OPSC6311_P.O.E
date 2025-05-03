@@ -27,4 +27,7 @@ interface CategoryDao {
 
     @Query("SELECT * FROM Category WHERE name = :categoryName LIMIT 1")
     suspend fun getCategoryByName(categoryName: String): Category?
+
+    @Query("UPDATE Category SET goal = :goal WHERE name = :categoryName")
+    suspend fun updateGoalByName(categoryName: String, goal: Int)
 }

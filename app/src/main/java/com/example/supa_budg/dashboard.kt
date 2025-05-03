@@ -13,12 +13,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+//import com.example.supa_budg.data.EntryDao
 
 
 class Dashboard : AppCompatActivity() {
 
     private val db by lazy { AppDatabase.getDatabase(this) }
     private lateinit var adapter: EntryAdapter
+
 
     private lateinit var entryRecyclerView: RecyclerView
     private lateinit var addButton: Button
@@ -30,57 +32,64 @@ class Dashboard : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.dashboard)
 
-        // Initialize views using findViewById
+        db = AppDatabase.getDatabase(this)
         entryRecyclerView = findViewById(R.id.rvEntries)
         addButton = findViewById(R.id.btnAddEntry)
         totalAllTime = findViewById(R.id.tvTotalAllTime)
         total7Days = findViewById(R.id.tvTotal7Days)
         total30Days = findViewById(R.id.tvTotal30Days)
 
-        // Setup RecyclerView
-        adapter = EntryAdapter(emptyList())
-        entryRecyclerView.layoutManager = LinearLayoutManager(this)
-        entryRecyclerView.adapter = adapter
-
-        // Handle Add Button Click
         addButton.setOnClickListener {
-            startActivity(Intent(this, add_income_expense::class.java))
+            startActivity(Intent(this, AddEntry::class.java)) // Corrected class name
         }
 
-        // Load dashboard data
-        loadDashboardData()
-    }
-
-    private fun loadDashboardData() {
         lifecycleScope.launch {
-            val today = LocalDate.now()
-            val last7 = today.minusDays(7)
-            val last30 = today.minusDays(30)
+            val categoryList = withContext(Dispatchers.IO) {
+                db.categoryDao().getAllCategories()
+            }
 
-            db.EntryDao().getEntriesBetween(last30.atStartOfDay(), today.atTime(23, 59, 59))
-                .observe(this@Dashboard) { entryList ->
-                    adapter.updateEntries(entryList)
+            db.categoryDao().getAllCategories().observe(this) { categoryList ->
+                val categoryNameMap = categoryList.associateBy({ it.categoryid }, { it.name })
+
+                adapter = EntryAdapter(emptyList(), categoryNameMap)
+                entryRecyclerView.layoutManager = LinearLayoutManager(this@Dashboard)
+                entryRecyclerView.adapter = adapter
+
+                loadDashboardData(categoryNameMap)
+            }
+        }
+
+
+        fun loadDashboardData() {
+            lifecycleScope.launch {
+                val today = LocalDate.now()
+                val last7 = today.minusDays(7)
+                val last30 = today.minusDays(30)
+
+                db.entryDao().getEntriesBetween(last30.atStartOfDay(), today.atTime(23, 59, 59))
+                    .observe(this@Dashboard) { entryList ->
+                        adapter.updateEntries(entryList)
+                    }
+
+
+                val totalAll = withContext(Dispatchers.IO) {
+                    db.entryDao().getTotalAmount()
+                }
+
+                val total7 = withContext(Dispatchers.IO) {
+                    db.entryDao().getTotalAmountFromDate(last7.toString(), today.toString())
+                }
+
+                val total30 = withContext(Dispatchers.IO) {
+                    db.entryDao().getTotalAmountFromDate(last30.toString(), today.toString())
                 }
 
 
-            val totalAll = withContext(Dispatchers.IO) {
-                db.EntryDao().getTotalAmount()
+                // Update text views
+                totalAllTime.text = "All Time: $totalAll"
+                total7Days.text = "Last 7 Days: $total7"
+                total30Days.text = "Last 30 Days: $total30"
             }
-
-            val total7 = withContext(Dispatchers.IO) {
-                db.EntryDao().getTotalAmountFromDate(last7.toString(), today.toString())
-            }
-
-            val total30 = withContext(Dispatchers.IO) {
-                db.EntryDao().getTotalAmountFromDate(last30.toString(), today.toString())
-            }
-
-            adapter.updateEntries(entries)
-
-            // Update text views
-            totalAllTime.text = "All Time: $totalAll"
-            total7Days.text = "Last 7 Days: $total7"
-            total30Days.text = "Last 30 Days: $total30"
         }
     }
 }

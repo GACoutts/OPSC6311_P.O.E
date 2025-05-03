@@ -10,8 +10,10 @@ import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.example.supa_budg.data.Entry
 
-class EntryAdapter(private var entries: List<Entry>) :
-    RecyclerView.Adapter<EntryAdapter.EntryViewHolder>() {
+class EntryAdapter(
+    private var entries: List<Entry>,
+    private val categoryNameMap: Map<Int, String>
+    ) : RecyclerView.Adapter<EntryAdapter.EntryViewHolder>() {
 
     inner class EntryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imgPhoto: ImageView = itemView.findViewById(R.id.imgEntryPhoto)
@@ -31,7 +33,7 @@ class EntryAdapter(private var entries: List<Entry>) :
         val entry = entries[position]
         holder.tvAmount.text = "R ${entry.amount}"
         holder.tvDate.text = entry.createdDateFormat
-        holder.tvCategory.text = "Category ID: ${entry.categoryid}" // Optional: map ID to name
+        holder.tvCategory.text = categoryNameMap[entry.categoryid] ?: "Unknown Category"
         holder.tvNotes.text = entry.notes
 
         if (!entry.photoUri.isNullOrBlank()) {

@@ -6,14 +6,19 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.supa_budg.data.AppDatabase
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+
 
 class setting_monthly_budget : AppCompatActivity() {
 
     private lateinit var categorySpinner: Spinner
     private lateinit var budgetDisplay: TextView
-    private lateinit var buttonExpense: Button
-    private lateinit var buttonIncome: Button
+    private lateinit var btnConfirmBudget: Button
     private lateinit var numberPadButtons: List<Button>
+    val db = AppDatabase.getDatabase(this)
+    val categoryDao = db.categoryDao()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,8 +40,7 @@ class setting_monthly_budget : AppCompatActivity() {
     private fun setupViews() {
         categorySpinner = findViewById(R.id.category_spinner)
         budgetDisplay = findViewById(R.id.budget_display)
-        buttonExpense = findViewById(R.id.button_expense)
-        buttonIncome = findViewById(R.id.button_income)
+        btnConfirmBudget = findViewById(R.id.btnConfimBudget)
 
         numberPadButtons = listOf(
             findViewById(R.id.button_0),
@@ -82,12 +86,42 @@ class setting_monthly_budget : AppCompatActivity() {
     }
 
     private fun setupButtons() {
-        buttonExpense.setOnClickListener {
-            Toast.makeText(this, "Expense selected: ${budgetDisplay.text}", Toast.LENGTH_SHORT).show()
-        }
+        btnConfirmBudget.setOnClickListener {
+            val goalAmountText = budgetDisplay.text.toString()
+            val selectedCategory = categorySpinner.selectedItem.toString()
 
-        buttonIncome.setOnClickListener {
-            Toast.makeText(this, "Income selected: ${budgetDisplay.text}", Toast.LENGTH_SHORT).show()
+            // Validation
+            if (goalAmountText.isBlank()) {
+                Toast.makeText(this, "Please enter a goal amount", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val goalAmount = goalAmountText.toFloatOrNull()
+            if (goalAmount == null) {
+                Toast.makeText(this, "Invalid number format", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Use coroutine to access DB
+            lifecycleScope.launch {
+                try {
+                    val db = AppDatabase.getDatabase(applicationContext)
+                    val categoryDao = db.categoryDao()
+                    categoryDao.updateGoalByName(selectedCategory, goalAmount.toInt())
+
+                    Toast.makeText(
+                        this@setting_monthly_budget,
+                        "Budget saved: $selectedCategory = R${goalAmount.toInt()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this@setting_monthly_budget,
+                        "Error saving budget: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
     }
 }
