@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -87,6 +88,40 @@ class AddCategory : AppCompatActivity() {
                     }
                 }
             }
+        }
+
+        // Footer items
+        val homeButton = findViewById<ImageButton>(R.id.footerHome)
+        val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
+        val addEntryButton = findViewById<ImageButton>(R.id.footerAddCategory)
+        val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
+
+        homeButton.setOnClickListener {
+            val intent = Intent(this, Dashboard::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        addEntryButton.setOnClickListener {
+            val intent = Intent(this, AddCategory::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        calendarButton.setOnClickListener {
+            val intent = Intent(this, EntryCalender::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        budgetButton.setOnClickListener {
+            val intent = Intent(this, SetMonthyBudget::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
         }
     }
 

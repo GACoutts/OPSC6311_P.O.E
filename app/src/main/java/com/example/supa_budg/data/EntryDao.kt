@@ -27,6 +27,15 @@ interface EntryDao {
     @Query("SELECT * FROM Entry WHERE date BETWEEN :start AND :end ORDER BY date DESC")
     fun getEntriesBetween(start: LocalDateTime, end: LocalDateTime): LiveData<List<Entry>>
 
+    @Query("SELECT * FROM Entry WHERE date >= :start AND date < :end")
+    suspend fun getEntriesBetweenNow(start: LocalDateTime, end: LocalDateTime): List<Entry>
+
+    @Query("SELECT SUM(amount) FROM Entry WHERE date BETWEEN :start AND :end")
+    suspend fun getTotalAmountFromDate(start: String, end: String): Double?
+
+    @Query("SELECT SUM(amount) FROM Entry")
+    suspend fun getTotalAmount(): Double?
+
     @Update
     suspend fun updateEntry(entry: Entry)
 

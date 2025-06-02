@@ -6,4 +6,11 @@
     </style>
 
     <style name="Theme.Supa_Budg" parent="Base.Theme.Supa_Budg" />
+
+    <style name="NumberPadButton" parent="Widget.AppCompat.Button">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_margin">4dp</item>
+    </style>
+
 </resources>

@@ -193,7 +193,7 @@ class AddEntry : AppCompatActivity() {
                     categoryid = category.categoryid,
                     notes = notes,
                     photoUri = photoUri,
-                    isExpense = isExpense
+                    isExpense = !toggleButton.isChecked
                 )
 
                 val entryDao = db.entryDao()
