@@ -1,7 +1,9 @@
 package com.example.supa_budg
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import android.widget.CalendarView
 import android.widget.ImageButton
 import android.widget.TextView
@@ -59,6 +61,12 @@ class EntryCalender : AppCompatActivity() {
         val addEntryButton = findViewById<ImageButton>(R.id.footerAddCategory)
         val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
 
+        // Setup Open Modal Button
+        val openModalButton = findViewById<Button>(R.id.openModalButton)
+        openModalButton.setOnClickListener {
+            showCustomModal()
+        }
+
         homeButton.setOnClickListener {
             val intent = Intent(this, Dashboard::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
@@ -86,6 +94,20 @@ class EntryCalender : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+    }
 
+    private fun showCustomModal() {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Custom Modal")
+            .setMessage("This is a custom modal dialog.")
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+
+        dialog.show()
     }
 }
