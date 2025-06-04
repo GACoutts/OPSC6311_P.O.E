@@ -143,6 +143,20 @@
         android:backgroundTint="@color/blue"
         android:textColor="@android:color/white" />
 
+    <!-- Showing Results for -->
+    <TextView
+        android:id="@+id/showingResultsDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Showing results for: \n1 June 2025"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:textAlignment="center"
+        app:layout_constraintBottom_toTopOf="@id/footer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="8dp" />
+
     <!-- Footer -->
     <include
         android:id="@+id/footer"
