@@ -50,6 +50,10 @@
             android:name=".SetMonthyBudget"
             android:exported="false" />
 
+        <activity
+            android:name=".Graph"
+            android:exported="false" />
+
     </application>
 
 </manifest>
