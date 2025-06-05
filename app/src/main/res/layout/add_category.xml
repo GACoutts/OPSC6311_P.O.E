@@ -112,7 +112,7 @@
             app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Footer (excluded from padding) -->
+    <!-- Footer -->
     <include
         android:id="@+id/footer"
         layout="@layout/footer"
