@@ -34,13 +34,14 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    buildFeatures{
-        viewBinding ; true
+    buildFeatures {
+        viewBinding; true
     }
 }
 
 dependencies {
 
+    implementation (libs.mpandroidchart)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -50,19 +51,18 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    implementation ("com.diogobernardino:williamchart:3.10.1")
+    implementation (libs.williamchart)
 
-    val room_version = "2.6.1"
+    val roomVersion = "2.6.1"
 
     //noinspection UseTomlInstead,GradleDependency
-    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-runtime:$roomVersion")
     //noinspection UseTomlInstead,GradleDependency
-    annotationProcessor("androidx.room:room-compiler:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$roomVersion")
     // To use Kotlin Symbol Processing (KSP)
     //noinspection UseTomlInstead,KaptUsageInsteadOfKsp,GradleDependency
-    kapt("androidx.room:room-compiler:$room_version")
+    kapt("androidx.room:room-compiler:$roomVersion")
     // optional - Kotlin Extensions and Coroutines support for Room
     //noinspection UseTomlInstead,GradleDependency
-    implementation("androidx.room:room-ktx:$room_version")
-
+    implementation("androidx.room:room-ktx:$roomVersion")
 }
