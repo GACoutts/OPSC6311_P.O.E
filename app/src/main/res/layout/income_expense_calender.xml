@@ -110,7 +110,7 @@
         app:layout_constraintBottom_toTopOf="@id/filterSection"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_max="350dp" />
+        app:layout_constraintHeight_max="310dp" />
 
     <!-- Filter section -->
     <LinearLayout
