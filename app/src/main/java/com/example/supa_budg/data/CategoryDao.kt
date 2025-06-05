@@ -16,6 +16,9 @@ interface CategoryDao {
     @Query("SELECT * FROM Category")
     suspend fun getAllCategoriesNow(): List<Category>
 
+    @Query("UPDATE Category SET goal = :goal WHERE name = :categoryName")
+    suspend fun updateGoalByName(categoryName: String, goal: Int)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCategory(category: Category)
 

@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 
-class setting_monthly_budget : AppCompatActivity() {
+class SetMonthyBudget : AppCompatActivity() {
 
     private lateinit var categorySpinner: Spinner
     private lateinit var budgetDisplay: TextView
@@ -23,7 +23,7 @@ class setting_monthly_budget : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_setting_monthly_budget)
+        setContentView(R.layout.set_monthly_budget)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -59,10 +59,20 @@ class setting_monthly_budget : AppCompatActivity() {
     }
 
     private fun setupSpinner() {
-        val categories = listOf("Overall", "Food", "Transport", "Utilities", "Entertainment")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        categorySpinner.adapter = adapter
+        // Observe category data from database
+        db.categoryDao().getAllCategories().observe(this) { categoryList ->
+            // Extract names, optionally add "Overall" as the first option
+            val categoryNames = mutableListOf("Overall")
+            categoryNames.addAll(categoryList.map { it.name })
+
+            val adapter = ArrayAdapter(
+                this,
+                android.R.layout.simple_spinner_item,
+                categoryNames
+            )
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            categorySpinner.adapter = adapter
+        }
     }
 
     private fun setupNumberPad() {
@@ -110,13 +120,13 @@ class setting_monthly_budget : AppCompatActivity() {
                     categoryDao.updateGoalByName(selectedCategory, goalAmount.toInt())
 
                     Toast.makeText(
-                        this@setting_monthly_budget,
+                        this@SetMonthyBudget,
                         "Budget saved: $selectedCategory = R${goalAmount.toInt()}",
                         Toast.LENGTH_SHORT
                     ).show()
                 } catch (e: Exception) {
                     Toast.makeText(
-                        this@setting_monthly_budget,
+                        this@SetMonthyBudget,
                         "Error saving budget: ${e.message}",
                         Toast.LENGTH_LONG
                     ).show()

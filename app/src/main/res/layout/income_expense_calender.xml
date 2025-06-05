@@ -6,7 +6,6 @@
     android:fitsSystemWindows="true"
     android:background="@color/white"
     >
-
     <!-- Top Summary Section -->
     <RelativeLayout
         android:id="@+id/summarySection"
@@ -102,16 +101,63 @@
         </LinearLayout>
     </RelativeLayout>
 
-    <!-- Calendar directly underneath -->
+    <!-- Calendar -->
     <CalendarView
         android:id="@+id/calendarView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@id/summarySection"
+        app:layout_constraintBottom_toTopOf="@id/filterSection"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_max="310dp" />
+
+    <!-- Filter section -->
+    <LinearLayout
+        android:id="@+id/filterSection"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        app:layout_constraintTop_toBottomOf="@id/calendarView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Filter -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/hint_filter"
+            android:textSize="16sp"/>
+    </LinearLayout>
+
+    <!-- Modal Button -->
+    <Button
+        android:id="@+id/openModalButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/hint_filter_by"
+        app:layout_constraintTop_toBottomOf="@id/filterSection"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_margin="8dp"
+        android:backgroundTint="@color/blue"
+        android:textColor="@android:color/white" />
+
+    <!-- Showing Results for -->
+    <TextView
+        android:id="@+id/showingResultsDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Showing results for: \n1 June 2025"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:textAlignment="center"
         app:layout_constraintBottom_toTopOf="@id/footer"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="8dp" />
 
+    <!-- Footer -->
     <include
         android:id="@+id/footer"
         layout="@layout/footer"

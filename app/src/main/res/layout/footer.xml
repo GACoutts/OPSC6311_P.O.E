@@ -53,13 +53,13 @@
 
         <!-- Footer Item 3 -->
         <ImageButton
-            android:id="@+id/footerGraph"
+            android:id="@+id/footerAddCategory"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginHorizontal="6dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/graph"
+            android:src="@drawable/add"
             android:scaleType="centerInside"
             android:contentDescription="Add Catgory" />
 
