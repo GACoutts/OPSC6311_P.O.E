@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "785216523532",
+    "project_id": "supabudg",
+    "storage_bucket": "supabudg.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:785216523532:android:ac556e0c70fc32629d4d29",
+        "android_client_info": {
+          "package_name": "com.example.supa_budg"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6oud9TwzKzCEoFTooWRzF5Icy3QDC3Cg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
