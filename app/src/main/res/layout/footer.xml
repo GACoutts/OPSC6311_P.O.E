@@ -53,17 +53,18 @@
 
         <!-- Footer Item 3 -->
         <ImageButton
-            android:id="@+id/footerAddCategory"
+            android:id="@+id/footerGraph"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
             android:layout_marginHorizontal="6dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/add"
+            android:src="@drawable/graph"
             android:scaleType="centerInside"
             android:contentDescription="Add Catgory" />
 
         <!-- Footer Item 4 -->
+        <!-- todo: Need to change this -->
         <ImageButton
             android:id="@+id/footerBudget"
             android:layout_width="0dp"

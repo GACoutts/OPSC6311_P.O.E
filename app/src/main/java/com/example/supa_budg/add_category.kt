@@ -4,13 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.supa_budg.data.AppDatabase
@@ -26,8 +20,9 @@ class AddCategory : AppCompatActivity() {
     private lateinit var budgetGoalInput: EditText
     private lateinit var saveCategoryButton: Button
     private lateinit var errorText: TextView
+    private lateinit var backButton: TextView
 
-    private val IMAGE_PICK_REQUEST_CODE = 1001
+    private val imagePickRequestCode = 1001
     private var selectedImageUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,10 +37,16 @@ class AddCategory : AppCompatActivity() {
         budgetGoalInput = findViewById(R.id.budgetGoalInput)
         saveCategoryButton = findViewById(R.id.saveCategoryButton)
         errorText = findViewById(R.id.errorText)
+        backButton = findViewById(R.id.backButton)
 
         // Set the click listener for the image picker container
         imagePickerContainer.setOnClickListener {
             openImagePicker()
+        }
+
+        // Handle back button click
+        backButton.setOnClickListener {
+            finish()
         }
 
         // Set the click listener for the save button
@@ -80,60 +81,30 @@ class AddCategory : AppCompatActivity() {
                             errorText.setTextColor(getColor(R.color.green))
                             errorText.visibility = TextView.VISIBLE
 
+                            // Clear inputs
                             categoryNameInput.text.clear()
                             budgetGoalInput.text.clear()
                             imageFileName.text = ""
                             selectedImageUri = null
+
+                            // Return to previous screen
+                            finish()
                         }
                     }
                 }
             }
         }
-
-        // Footer items
-        val homeButton = findViewById<ImageButton>(R.id.footerHome)
-        val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
-        val addEntryButton = findViewById<ImageButton>(R.id.footerAddCategory)
-        val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
-
-        homeButton.setOnClickListener {
-            val intent = Intent(this, Dashboard::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        addEntryButton.setOnClickListener {
-            val intent = Intent(this, AddCategory::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        calendarButton.setOnClickListener {
-            val intent = Intent(this, EntryCalender::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        budgetButton.setOnClickListener {
-            val intent = Intent(this, SetMonthyBudget::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
     }
 
     private fun openImagePicker() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        startActivityForResult(intent, IMAGE_PICK_REQUEST_CODE)
+        startActivityForResult(intent, imagePickRequestCode)
     }
 
     // Handling the result of the image picker activity
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == IMAGE_PICK_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+        if (requestCode == imagePickRequestCode && resultCode == RESULT_OK && data != null) {
             selectedImageUri = data.data
             val imagePath = selectedImageUri.toString()
             imageFileName.text = imagePath

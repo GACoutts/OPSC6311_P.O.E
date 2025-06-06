@@ -58,14 +58,8 @@ class EntryCalender : AppCompatActivity() {
         // Footer items
         val homeButton = findViewById<ImageButton>(R.id.footerHome)
         val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
-        val addEntryButton = findViewById<ImageButton>(R.id.footerAddCategory)
+        val addEntryButton = findViewById<ImageButton>(R.id.footerGraph)
         val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
-
-        // Setup Open Modal Button
-        val openModalButton = findViewById<Button>(R.id.openModalButton)
-        openModalButton.setOnClickListener {
-            showCustomModal()
-        }
 
         homeButton.setOnClickListener {
             val intent = Intent(this, Dashboard::class.java)
@@ -75,7 +69,7 @@ class EntryCalender : AppCompatActivity() {
         }
 
         addEntryButton.setOnClickListener {
-            val intent = Intent(this, AddCategory::class.java)
+            val intent = Intent(this, Graph::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
             finish()

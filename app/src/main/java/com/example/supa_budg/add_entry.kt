@@ -214,28 +214,28 @@ class AddEntry : AppCompatActivity() {
         categoryTextView.setOnClickListener {
             lifecycleScope.launch {
                 val categories = categoryDao.getAllCategoriesNow()
+                val categoryNames = categories.map { it.name }.toMutableList()
+                categoryNames.add("Add Category")
 
-                if (categories.isEmpty()) {
-                    runOnUiThread {
-                        errorText.text = "Please add a category first."
-                        errorText.setTextColor(getColor(R.color.red))
-                        errorText.visibility = TextView.VISIBLE
-                    }
-                } else {
-                    val categoryNames = categories.map { it.name }.toTypedArray()
-
-                    runOnUiThread {
-                        val builder = AlertDialog.Builder(this@AddEntry)
-                        builder.setTitle("Select Category")
-                        builder.setItems(categoryNames) { _, which ->
+                runOnUiThread {
+                    val builder = AlertDialog.Builder(this@AddEntry)
+                    builder.setTitle("Select Category")
+                    builder.setItems(categoryNames.toTypedArray()) { _, which ->
+                        if (which == categoryNames.size - 1) {
+                            // User chose "Add Category"
+                            val intent = Intent(this@AddEntry, AddCategory::class.java)
+                            startActivity(intent)
+                        } else {
+                            // User chose an existing category
                             categoryTextView.text = categoryNames[which]
                             errorText.visibility = TextView.GONE
                         }
-                        builder.show()
                     }
+                    builder.show()
                 }
             }
         }
+
     }
 
     private fun updateDateText(calendar: Calendar, textView: TextView) {

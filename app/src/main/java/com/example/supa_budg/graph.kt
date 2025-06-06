@@ -43,5 +43,44 @@ class Graph : AppCompatActivity() {
         lineChart.axisRight.isEnabled = false
         lineChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
         lineChart.animateX(1000)
+
+        setupFooter()
+    }
+
+    private fun setupFooter() {
+        val homeButton = findViewById<ImageButton>(R.id.footerHome)
+        val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
+        val addEntryButton = findViewById<ImageButton>(R.id.footerGraph)
+        val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
+
+        homeButton.setOnClickListener {
+            val intent = Intent(this, Dashboard::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        addEntryButton.setOnClickListener {
+            val intent = Intent(this, Graph::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        calendarButton.setOnClickListener {
+            val intent = Intent(this, EntryCalender::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        budgetButton.setOnClickListener {
+            val intent = Intent(this, SetMonthyBudget::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
         }
     }
+}
+
+
