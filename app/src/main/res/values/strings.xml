@@ -45,7 +45,7 @@
     <string name="cd_change_value">Change from income to expense and vice versa</string>
 
     <!-- Calender Page -->
-    <string name="hint_filter">Custom Filter Settings</string>
+    <string name="hint_filter">Filter Settings</string>
     <string name="hint_filter_by">Filter By</string>
 
 

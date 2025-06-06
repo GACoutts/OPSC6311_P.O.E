@@ -8,6 +8,7 @@ import android.widget.CalendarView
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.supa_budg.data.AppDatabase
 import kotlinx.coroutines.launch
@@ -55,11 +56,18 @@ class EntryCalender : AppCompatActivity() {
             }
         }
 
+        setupFooter()
+    }
+
+    private fun setupFooter() {
+
         // Footer items
         val homeButton = findViewById<ImageButton>(R.id.footerHome)
         val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
         val addEntryButton = findViewById<ImageButton>(R.id.footerGraph)
         val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
+
+        calendarButton.setColorFilter(ContextCompat.getColor(this, R.color.blue))
 
         homeButton.setOnClickListener {
             val intent = Intent(this, Dashboard::class.java)
@@ -88,20 +96,5 @@ class EntryCalender : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-    }
-
-    private fun showCustomModal() {
-        val dialog = AlertDialog.Builder(this)
-            .setTitle("Custom Modal")
-            .setMessage("This is a custom modal dialog.")
-            .setPositiveButton("OK") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .create()
-
-        dialog.show()
     }
 }

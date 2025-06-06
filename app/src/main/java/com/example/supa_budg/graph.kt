@@ -5,12 +5,11 @@ import android.graphics.Color
 import android.os.Bundle
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
-import com.example.supa_budg.data.Entry
+import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.data.Entry as ChartEntry
 
 class Graph : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,8 +49,10 @@ class Graph : AppCompatActivity() {
     private fun setupFooter() {
         val homeButton = findViewById<ImageButton>(R.id.footerHome)
         val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
-        val addEntryButton = findViewById<ImageButton>(R.id.footerGraph)
+        val graph = findViewById<ImageButton>(R.id.footerGraph)
         val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
+
+        graph.setColorFilter(ContextCompat.getColor(this, R.color.blue))
 
         homeButton.setOnClickListener {
             val intent = Intent(this, Dashboard::class.java)
@@ -60,7 +61,7 @@ class Graph : AppCompatActivity() {
             finish()
         }
 
-        addEntryButton.setOnClickListener {
+        graph.setOnClickListener {
             val intent = Intent(this, Graph::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)

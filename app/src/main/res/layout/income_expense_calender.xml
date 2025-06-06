@@ -128,7 +128,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/hint_filter"
-            android:textSize="16sp"/>
+            android:textSize="16sp"
+            />
     </LinearLayout>
 
     <!-- Modal Button -->
@@ -148,9 +149,9 @@
         android:id="@+id/showingResultsDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Showing results for: \n1 June 2025"
+        android:text="Results for: 1 June 2025"
         android:textSize="16sp"
-        android:textColor="@color/black"
+        android:textColor="@color/grey"
         android:textAlignment="center"
         app:layout_constraintBottom_toTopOf="@id/footer"
         app:layout_constraintStart_toStartOf="parent"

@@ -20,7 +20,7 @@ class AddCategory : AppCompatActivity() {
     private lateinit var budgetGoalInput: EditText
     private lateinit var saveCategoryButton: Button
     private lateinit var errorText: TextView
-    private lateinit var backButton: TextView
+    private lateinit var backButton: ImageButton
 
     private val imagePickRequestCode = 1001
     private var selectedImageUri: Uri? = null

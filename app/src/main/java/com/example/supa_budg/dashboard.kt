@@ -6,6 +6,7 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -73,11 +74,18 @@ class Dashboard : AppCompatActivity() {
             }
         }
 
+        setupFooter();
+    }
+
+    private fun setupFooter() {
+
         // Footer items
         val homeButton = findViewById<ImageButton>(R.id.footerHome)
         val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
         val addEntryButton = findViewById<ImageButton>(R.id.footerGraph)
         val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
+
+        homeButton.setColorFilter(ContextCompat.getColor(this, R.color.blue))
 
         homeButton.setOnClickListener {
             val intent = Intent(this, Dashboard::class.java)
