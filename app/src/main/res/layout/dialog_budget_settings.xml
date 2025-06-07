@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Category -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Category:" />
+
+    <Spinner
+        android:id="@+id/categorySpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:spinnerMode="dropdown" />
+
+    <!-- Date Range -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Date Range:"
+        android:layout_marginTop="24dp" />
+
+    <Button
+        android:id="@+id/dateRangeButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select Date Range"
+        android:backgroundTint="@color/blue"
+        android:textColor="@android:color/white"/>
+
+    <!-- Edit Budgets Button -->
+    <Button
+        android:id="@+id/editBudgetsButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Edit Budgets"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="@color/white"
+        android:textColor="@color/blue"/>
+
+</LinearLayout>

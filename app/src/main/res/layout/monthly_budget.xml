@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <!-- Budget Label -->
+    <TextView
+        android:id="@+id/budgetLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Budget"
+        android:textSize="16sp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/spentLabel"
+        app:layout_constraintHorizontal_chainStyle="spread" />
+
+    <!-- Spent Label -->
+    <TextView
+        android:id="@+id/spentLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Spent"
+        android:textSize="16sp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/budgetLabel"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Budget Amount -->
+    <TextView
+        android:id="@+id/budgetText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="R0"
+        android:textSize="16sp"
+        android:textColor="@android:color/black"
+        android:textStyle="normal"
+        android:layout_marginTop="4dp"
+        app:layout_constraintTop_toBottomOf="@id/budgetLabel"
+        app:layout_constraintStart_toStartOf="@id/budgetLabel"
+        app:layout_constraintEnd_toEndOf="@id/budgetLabel"/>
+
+    <!-- Spent Amount -->
+    <TextView
+        android:id="@+id/spentText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="R0"
+        android:textSize="16sp"
+        android:textColor="@android:color/black"
+        android:textStyle="normal"
+        android:layout_marginTop="4dp"
+        app:layout_constraintTop_toBottomOf="@id/spentLabel"
+        app:layout_constraintStart_toStartOf="@id/spentLabel"
+        app:layout_constraintEnd_toEndOf="@id/spentLabel" />
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="24dp"
+        android:indeterminate="false"
+        android:max="100"
+        android:progress="0"
+        android:progressDrawable="@drawable/circular_progress_drawable"
+        app:layout_constraintTop_toBottomOf="@id/budgetText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Percentage Text -->
+    <TextView
+        android:id="@+id/percentageText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0%"
+        android:textSize="20sp"
+        android:textColor="@android:color/black"
+        android:textStyle="normal"
+        app:layout_constraintTop_toTopOf="@id/progressBar"
+        app:layout_constraintBottom_toBottomOf="@id/progressBar"
+        app:layout_constraintStart_toStartOf="@id/progressBar"
+        app:layout_constraintEnd_toEndOf="@id/progressBar"/>
+
+    <!-- Budget Settings Button -->
+    <Button
+        android:id="@+id/budgetSettingsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Budget Settings"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/progressBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:backgroundTint="@color/white"
+        android:textColor="@color/blue"/>
+
+    <!-- Footer -->
+    <include
+        android:id="@+id/footer"
+        layout="@layout/footer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

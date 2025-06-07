@@ -55,7 +55,12 @@
             android:exported="false" />
 
          <activity
-            android:name=".achievements" />
+            android:name=".Achievements"
+             android:exported="false"/>
+
+        <activity
+            android:name=".MonthlyBudget"
+            android:exported="false"/>
 
     </application>
 

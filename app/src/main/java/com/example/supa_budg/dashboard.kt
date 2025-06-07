@@ -86,6 +86,7 @@ class Dashboard : AppCompatActivity() {
         val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
 
         homeButton.setColorFilter(ContextCompat.getColor(this, R.color.blue))
+        homeButton.isEnabled = false
 
         homeButton.setOnClickListener {
             val intent = Intent(this, Dashboard::class.java)
@@ -109,7 +110,7 @@ class Dashboard : AppCompatActivity() {
         }
 
         budgetButton.setOnClickListener {
-            val intent = Intent(this, SetMonthyBudget::class.java)
+            val intent = Intent(this, MonthlyBudget::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
             finish()

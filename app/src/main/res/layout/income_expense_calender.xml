@@ -122,8 +122,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_margin="8dp"
-        android:backgroundTint="@color/blue"
-        android:textColor="@android:color/white" />
+        android:backgroundTint="@color/white"
+        android:textColor="@color/blue" />
 
     <!-- Showing Results for -->
     <TextView
