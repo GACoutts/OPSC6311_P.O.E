@@ -86,6 +86,7 @@ class Dashboard : AppCompatActivity() {
         val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
 
         homeButton.setColorFilter(ContextCompat.getColor(this, R.color.blue))
+        homeButton.setBackgroundResource(R.drawable.footer_button_bg)
         homeButton.isEnabled = false
 
         homeButton.setOnClickListener {

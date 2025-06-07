@@ -68,6 +68,7 @@ class EntryCalender : AppCompatActivity() {
         val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
 
         calendarButton.setColorFilter(ContextCompat.getColor(this, R.color.blue))
+        calendarButton.setBackgroundResource(R.drawable.footer_button_bg)
         calendarButton.isEnabled = false;
 
         homeButton.setOnClickListener {

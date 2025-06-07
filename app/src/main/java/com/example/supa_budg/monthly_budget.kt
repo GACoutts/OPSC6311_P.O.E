@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.supa_budg.data.AppDatabase
 import com.example.supa_budg.data.Category
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
 
 class MonthlyBudget : AppCompatActivity() {
 
@@ -27,7 +28,7 @@ class MonthlyBudget : AppCompatActivity() {
         setContentView(R.layout.monthly_budget)
         var percentageUsed = 0
 
-        // Dummy values
+        // Default values
         val budget = 0f
         val spent = 0f
 
@@ -85,6 +86,7 @@ class MonthlyBudget : AppCompatActivity() {
         val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
 
         budgetButton.setColorFilter(ContextCompat.getColor(this, R.color.blue))
+        budgetButton.setBackgroundResource(R.drawable.footer_button_bg)
         budgetButton.isEnabled = false
 
         homeButton.setOnClickListener {
@@ -165,11 +167,11 @@ class MonthlyBudget : AppCompatActivity() {
             .setPositiveButton("Set") { dialog, _ ->
                 val selectedCategoryName = categorySpinner.selectedItem.toString()
                 if (selectedCategoryName != "Add Category") {
-                    // Find the selected Category object
                     val selectedCategory = categories.find { it.name == selectedCategoryName }
                     if (selectedCategory != null) {
-                        // Update your budget UI or logic here using selectedCategory.goal
-                        updateBudgetWithGoal(selectedCategory.goal.toFloat())
+                        lifecycleScope.launch {
+                            updateCategoryBudget(selectedCategory)
+                        }
                     } else {
                         Toast.makeText(this, "Selected category not found", Toast.LENGTH_SHORT).show()
                     }
@@ -180,20 +182,34 @@ class MonthlyBudget : AppCompatActivity() {
         builder.create().show()
     }
 
-    private fun updateBudgetWithGoal(goal: Float) {
+    private suspend fun updateCategoryBudget(category: Category) {
+        val db = AppDatabase.getDatabase(applicationContext)
+        val entryDao = db.entryDao()
+        try {
+            val netTotal = (entryDao.getNetTotalByCategory(category.categoryid) ?: 0.0).absoluteValue
+            val goal = category.goal.toFloat()
+
+            val percentageUsed = ((netTotal / goal) * 100).toInt()
+
+            runOnUiThread {
+                updateBudgetWithValues(goal, netTotal.toFloat(), percentageUsed)
+            }
+        } catch (e: Exception) {
+            runOnUiThread {
+                Toast.makeText(this, "Error loading entries: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun updateBudgetWithValues(goal: Float, netTotal: Float, percentageUsed: Int) {
         val budgetTextView = findViewById<TextView>(R.id.budgetText)
         val spentTextView = findViewById<TextView>(R.id.spentText)
         val progressBar = findViewById<ProgressBar>(R.id.progressBar)
         val percentageText = findViewById<TextView>(R.id.percentageText)
 
-        val spent = 7500f
-
-        val percentageUsed = ((spent / goal) * 100).toInt()
-
         budgetTextView.text = "Budget: R$${goal.toInt()}"
-        spentTextView.text = "Spent: R$${spent.toInt()}"
+        spentTextView.text = "Spent: R$${netTotal.toInt()}"
         progressBar.progress = percentageUsed.coerceIn(0, 100)
         percentageText.text = "$percentageUsed%"
     }
-
 }

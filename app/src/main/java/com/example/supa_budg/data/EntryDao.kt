@@ -36,6 +36,16 @@ interface EntryDao {
     @Query("SELECT SUM(amount) FROM Entry")
     suspend fun getTotalAmount(): Double?
 
+    @Query("""
+    SELECT SUM(CASE 
+                   WHEN isExpense = 1 THEN -amount 
+                   ELSE amount 
+               END) 
+    FROM Entry 
+    WHERE categoryid = :categoryId
+        """)
+    suspend fun getNetTotalByCategory(categoryId: Int): Double?
+
     @Update
     suspend fun updateEntry(entry: Entry)
 
