@@ -13,9 +13,16 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.supa_budg.data.AppDatabase
+import com.example.supa_budg.data.Category
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class MonthlyBudget : AppCompatActivity() {
+
+    // Database Objects
+    private lateinit var categories: List<Category>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,12 +49,29 @@ class MonthlyBudget : AppCompatActivity() {
             showBudgetSettingsModal()
         }
 
+
         progressBar.progress = percentageUsed
         percentageText.text = "$percentageUsed%"
         budgetText.text = "Budget: $${budget.toInt()}"
         spentText.text = "Spent: $${spent.toInt()}"
 
         setupFooter()
+        loadCategories()
+    }
+
+    private fun loadCategories() {
+        val db = AppDatabase.getDatabase(applicationContext)
+        val categoryDao = db.categoryDao()
+
+        lifecycleScope.launch {
+            try {
+                categories = categoryDao.getAllCategoriesNow()
+            } catch (e: Exception) {
+                Toast.makeText(this@MonthlyBudget, "Error loading categories: ${e.message}", Toast.LENGTH_SHORT).show()
+                categories = emptyList()
+                categories = emptyList()
+            }
+        }
     }
 
     private fun setupFooter() {
@@ -93,38 +117,89 @@ class MonthlyBudget : AppCompatActivity() {
     private fun showBudgetSettingsModal() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_budget_settings, null)
 
-        // Setup category spinner
         val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
-        val categories = listOf("Food", "Transport", "Entertainment", "Utilities", "Other") // Dummy categories
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
+        val editBudgetsButton = dialogView.findViewById<Button>(R.id.editBudgetsButton)
+
+        val categoryNames = if (::categories.isInitialized && categories.isNotEmpty()) {
+            categories.map { it.name }.toMutableList()
+        } else {
+            mutableListOf("Food", "Transport", "Entertainment", "Utilities", "Other")
+        }
+
+        categoryNames.add("Add Category")
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categoryNames)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         categorySpinner.adapter = adapter
 
-        // Date range button
+        categorySpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>, view: android.view.View, position: Int, id: Long) {
+                if (position == categoryNames.lastIndex) {
+                    // Navigate to AddCategory page
+                    val intent = Intent(this@MonthlyBudget, AddCategory::class.java)
+                    startActivity(intent)
+                    categorySpinner.setSelection(0) // Reset selection
+                }
+            }
+
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>) {}
+        }
+
+        editBudgetsButton.setOnClickListener {
+            val selectedCategoryName = categorySpinner.selectedItem.toString()
+            if (selectedCategoryName != "Add Category") {
+                val intent = Intent(this, SetMonthyBudget::class.java)
+                intent.putExtra("selectedCategory", selectedCategoryName)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Please select a valid category", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         val dateRangeButton = dialogView.findViewById<Button>(R.id.dateRangeButton)
         dateRangeButton.setOnClickListener {
             showDateRangePicker()
         }
 
-        // Edit Budgets button
-        val editBudgetsButton = dialogView.findViewById<Button>(R.id.editBudgetsButton)
-        editBudgetsButton.setOnClickListener {
-            val selectedCategory = categorySpinner.selectedItem.toString()
-            val intent = Intent(this, SetMonthyBudget::class.java)
-            intent.putExtra("selectedCategory", selectedCategory)
-            startActivity(intent)
-        }
-
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Budget Settings")
-        builder.setView(dialogView)
-        builder.setNegativeButton("Cancel") { dialog, _ ->
-            dialog.dismiss()
-        }
+            .setTitle("Budget Settings")
+            .setView(dialogView)
+            .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton("Set") { dialog, _ ->
+                val selectedCategoryName = categorySpinner.selectedItem.toString()
+                if (selectedCategoryName != "Add Category") {
+                    // Find the selected Category object
+                    val selectedCategory = categories.find { it.name == selectedCategoryName }
+                    if (selectedCategory != null) {
+                        // Update your budget UI or logic here using selectedCategory.goal
+                        updateBudgetWithGoal(selectedCategory.goal.toFloat())
+                    } else {
+                        Toast.makeText(this, "Selected category not found", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                dialog.dismiss()
+            }
 
-        val dialog = builder.create()
-        dialog.show()
+        builder.create().show()
     }
+
+    private fun updateBudgetWithGoal(goal: Float) {
+        val budgetTextView = findViewById<TextView>(R.id.budgetText)
+        val spentTextView = findViewById<TextView>(R.id.spentText)
+        val progressBar = findViewById<ProgressBar>(R.id.progressBar)
+        val percentageText = findViewById<TextView>(R.id.percentageText)
+
+        // Assuming you have a way to get the spent value, for example from your data:
+        val spent = 7500f // replace with actual spent value
+
+        val percentageUsed = ((spent / goal) * 100).toInt()
+
+        budgetTextView.text = "Budget: R$${goal.toInt()}"
+        spentTextView.text = "Spent: R$${spent.toInt()}"
+        progressBar.progress = percentageUsed.coerceIn(0, 100)
+        percentageText.text = "$percentageUsed%"
+    }
+
 
     private fun showDateRangePicker() {
         val calendar = Calendar.getInstance()
