@@ -1,6 +1,5 @@
 package com.example.supa_budg
 
-import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ArrayAdapter
@@ -17,7 +16,6 @@ import androidx.lifecycle.lifecycleScope
 import com.example.supa_budg.data.AppDatabase
 import com.example.supa_budg.data.Category
 import kotlinx.coroutines.launch
-import java.util.Calendar
 
 class MonthlyBudget : AppCompatActivity() {
 
@@ -27,11 +25,15 @@ class MonthlyBudget : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.monthly_budget)
+        var percentageUsed = 0
 
         // Dummy values
-        val budget = 1000f
-        val spent = 7500f
-        val percentageUsed = ((spent / budget) * 100).toInt()
+        val budget = 0f
+        val spent = 0f
+
+        if(budget !== 0f || spent !== 0f) {
+            percentageUsed = ((spent / budget) * 100).toInt()
+        }
 
         val budgetTextView = findViewById<TextView>(R.id.budgetText)
         val spentTextView = findViewById<TextView>(R.id.spentText)
@@ -148,17 +150,12 @@ class MonthlyBudget : AppCompatActivity() {
         editBudgetsButton.setOnClickListener {
             val selectedCategoryName = categorySpinner.selectedItem.toString()
             if (selectedCategoryName != "Add Category") {
-                val intent = Intent(this, SetMonthyBudget::class.java)
+                val intent = Intent(this, SetMonthlyBudget::class.java)
                 intent.putExtra("selectedCategory", selectedCategoryName)
                 startActivity(intent)
             } else {
                 Toast.makeText(this, "Please select a valid category", Toast.LENGTH_SHORT).show()
             }
-        }
-
-        val dateRangeButton = dialogView.findViewById<Button>(R.id.dateRangeButton)
-        dateRangeButton.setOnClickListener {
-            showDateRangePicker()
         }
 
         val builder = AlertDialog.Builder(this)
@@ -189,8 +186,7 @@ class MonthlyBudget : AppCompatActivity() {
         val progressBar = findViewById<ProgressBar>(R.id.progressBar)
         val percentageText = findViewById<TextView>(R.id.percentageText)
 
-        // Assuming you have a way to get the spent value, for example from your data:
-        val spent = 7500f // replace with actual spent value
+        val spent = 7500f
 
         val percentageUsed = ((spent / goal) * 100).toInt()
 
@@ -199,40 +195,5 @@ class MonthlyBudget : AppCompatActivity() {
         progressBar.progress = percentageUsed.coerceIn(0, 100)
         percentageText.text = "$percentageUsed%"
     }
-
-
-    private fun showDateRangePicker() {
-        val calendar = Calendar.getInstance()
-
-        val startDateListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
-            val startDate = "${dayOfMonth}/${month + 1}/${year}"
-
-            val endDateListener = DatePickerDialog.OnDateSetListener { _, endYear, endMonth, endDay ->
-                val endDate = "${endDay}/${endMonth + 1}/${endYear}"
-                Toast.makeText(this, "Selected range: $startDate - $endDate", Toast.LENGTH_SHORT).show()
-            }
-
-            val endDatePicker = DatePickerDialog(
-                this,
-                endDateListener,
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            )
-            endDatePicker.setTitle("Select End Date")
-            endDatePicker.show()
-        }
-
-        val startDatePicker = DatePickerDialog(
-            this,
-            startDateListener,
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-        startDatePicker.setTitle("Select Start Date")
-        startDatePicker.show()
-    }
-
 
 }

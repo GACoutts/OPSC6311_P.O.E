@@ -11,14 +11,13 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 
-class SetMonthyBudget : AppCompatActivity() {
+class SetMonthlyBudget : AppCompatActivity() {
 
     private lateinit var categorySpinner: Spinner
     private lateinit var budgetDisplay: TextView
     private lateinit var btnConfirmBudget: Button
     private lateinit var numberPadButtons: List<Button>
     val db = AppDatabase.getDatabase(this)
-    val categoryDao = db.categoryDao()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +34,7 @@ class SetMonthyBudget : AppCompatActivity() {
         setupSpinner()
         setupNumberPad()
         setupButtons()
+        setupCloseButton()
     }
 
     private fun setupViews() {
@@ -56,6 +56,13 @@ class SetMonthyBudget : AppCompatActivity() {
             findViewById(R.id.button_dot),
             findViewById(R.id.button_backspace)
         )
+    }
+
+    private fun setupCloseButton() {
+        val btnClose: ImageButton = findViewById(R.id.btnClose)
+        btnClose.setOnClickListener {
+            finish()
+        }
     }
 
     private fun setupSpinner() {
@@ -120,13 +127,13 @@ class SetMonthyBudget : AppCompatActivity() {
                     categoryDao.updateGoalByName(selectedCategory, goalAmount.toInt())
 
                     Toast.makeText(
-                        this@SetMonthyBudget,
+                        this@SetMonthlyBudget,
                         "Budget saved: $selectedCategory = R${goalAmount.toInt()}",
                         Toast.LENGTH_SHORT
                     ).show()
                 } catch (e: Exception) {
                     Toast.makeText(
-                        this@SetMonthyBudget,
+                        this@SetMonthlyBudget,
                         "Error saving budget: ${e.message}",
                         Toast.LENGTH_LONG
                     ).show()

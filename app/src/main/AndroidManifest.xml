@@ -47,7 +47,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".SetMonthyBudget"
+            android:name=".SetMonthlyBudget"
             android:exported="false" />
 
         <activity

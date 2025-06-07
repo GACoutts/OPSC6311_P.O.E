@@ -7,6 +7,18 @@
     android:background="@color/white"
     android:padding="16dp">
 
+    <ImageButton
+        android:id="@+id/btnClose"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Close"
+        android:padding="8dp"
+        android:src="@drawable/cross"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/black"/>
+
     <!-- Monthly budget label at the top -->
     <TextView
         android:id="@+id/textView5"
@@ -17,7 +29,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:textSize="24sp"
-        android:textColor="@color/blue"
         android:textStyle="bold"/>
 
     <!-- Spinner below label -->
