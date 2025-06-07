@@ -54,6 +54,9 @@
             android:name=".Graph"
             android:exported="false" />
 
+         <activity
+            android:name=".achievements" />
+
     </application>
 
 </manifest>
