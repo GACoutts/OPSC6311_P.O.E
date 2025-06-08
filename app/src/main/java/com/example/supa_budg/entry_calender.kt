@@ -155,22 +155,44 @@ class EntryCalender : AppCompatActivity() {
         val builder = androidx.appcompat.app.AlertDialog.Builder(this)
         builder.setTitle("Calender Settings")
         builder.setView(dialogView)
-        builder.setPositiveButton("OK") { dialog, _ ->
+        builder.setPositiveButton("OK") { dialogInterface, _ ->
             val selected = categorySpinner.selectedItem.toString()
-            if (selected == "Add Category") {
-                val intent = Intent(this, AddCategory::class.java)
-                startActivity(intent)
-            } else {
+            if (selected != "Add Category") {
                 selectedCategory = selected
                 lifecycleScope.launch {
                     applyDateRangeFilter()
                 }
             }
-            dialog.dismiss()
+            dialogInterface.dismiss()
         }
-        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
-        builder.create().show()
+        builder.setNegativeButton("Cancel") { dialogInterface, _ -> dialogInterface.dismiss() }
+
+        // Show dialog and get reference
+        val dialog = builder.show()
+
+        // Now set spinner listener AFTER dialog.show() so we can dismiss it:
+        categorySpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: android.widget.AdapterView<*>?,
+                view: android.view.View?,
+                position: Int,
+                id: Long
+            ) {
+                val selected = categorySpinner.selectedItem.toString()
+                if (selected == "Add Category") {
+                    val intent = Intent(this@EntryCalender, AddCategory::class.java)
+                    startActivity(intent)
+                    dialog.dismiss()
+                }
+            }
+
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
+                // No action needed
+            }
+        }
     }
+
+
 
     private fun showDateRangePicker() {
         val calendar = Calendar.getInstance()
