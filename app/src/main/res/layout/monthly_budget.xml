@@ -91,6 +91,18 @@
         app:layout_constraintStart_toStartOf="@id/progressBar"
         app:layout_constraintEnd_toEndOf="@id/progressBar"/>
 
+    <TextView
+        android:id="@+id/showingResultsText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="16sp"
+        android:textColor="@color/grey"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/footer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
     <!-- Budget Settings Button -->
     <Button
         android:id="@+id/budgetSettingsButton"

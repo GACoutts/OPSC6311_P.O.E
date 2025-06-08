@@ -1,21 +1,30 @@
 package com.example.supa_budg
 
-import android.app.AlertDialog
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CalendarView
 import android.widget.ImageButton
+import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.supa_budg.data.AppDatabase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.util.Calendar
 
 class EntryCalender : AppCompatActivity() {
+
+    private var selectedCategory: String? = null
+    private var selectedStartDate: String? = null
+    private var selectedEndDate: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.income_expense_calender)
@@ -56,7 +65,84 @@ class EntryCalender : AppCompatActivity() {
             }
         }
 
+        val openModalButton = findViewById<Button>(R.id.openModalButton)
+        openModalButton.setOnClickListener {
+            showGraphSettingsModal()
+        }
+
         setupFooter()
+    }
+
+    private fun showGraphSettingsModal() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_graph_settings, null)
+        val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
+
+        // Load categories from database
+        lifecycleScope.launch(Dispatchers.IO) {
+            val db = AppDatabase.getDatabase(applicationContext)
+            val categories = db.categoryDao().getAllCategoriesNow().map { it.name }.toMutableList()
+
+            // Add "Add Category" option at the end
+            categories.add("Add Category")
+
+            // Switch to Main thread to update UI
+            launch(Dispatchers.Main) {
+                val adapter = ArrayAdapter(this@EntryCalender, android.R.layout.simple_spinner_item, categories)
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                categorySpinner.adapter = adapter
+            }
+        }
+
+        val dateRangeButton = dialogView.findViewById<Button>(R.id.dateRangeButton)
+        dateRangeButton.setOnClickListener {
+            showDateRangePicker()
+        }
+
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("Calender Settings")
+        builder.setView(dialogView)
+        builder.setPositiveButton("OK") { dialog, _ ->
+            val selected = categorySpinner.selectedItem.toString()
+            if (selected == "Add Category") {
+                val intent = Intent(this, AddCategory::class.java)
+                startActivity(intent)
+            } else {
+                selectedCategory = selected
+                // Add new function here
+            }
+            dialog.dismiss()
+        }
+        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+        builder.create().show()
+    }
+
+    private fun showDateRangePicker() {
+        val calendar = Calendar.getInstance()
+        val startDateListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
+            selectedStartDate = "${year}-${month + 1}-$dayOfMonth"
+            val endDateListener = DatePickerDialog.OnDateSetListener { _, endYear, endMonth, endDay ->
+                selectedEndDate = "${endYear}-${endMonth + 1}-$endDay"
+                Toast.makeText(this, "Selected range: $selectedStartDate to $selectedEndDate", Toast.LENGTH_SHORT).show()
+            }
+
+            val endDatePicker = DatePickerDialog(
+                this, endDateListener,
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+            endDatePicker.setTitle("Select End Date")
+            endDatePicker.show()
+        }
+
+        val startDatePicker = DatePickerDialog(
+            this, startDateListener,
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+        startDatePicker.setTitle("Select Start Date")
+        startDatePicker.show()
     }
 
     private fun setupFooter() {

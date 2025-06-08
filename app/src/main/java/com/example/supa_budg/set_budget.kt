@@ -85,22 +85,52 @@ class SetMonthlyBudget : AppCompatActivity() {
     private fun setupNumberPad() {
         for (button in numberPadButtons) {
             button.setOnClickListener {
-                when (val label = (it as Button).text.toString()) {
+                val label = (it as Button).text.toString()
+                val currentText = budgetDisplay.text.toString()
+
+                // Remove the leading 'R' to work with the numeric part
+                val numericPart = if (currentText.startsWith("R")) {
+                    currentText.substring(1)
+                } else {
+                    currentText
+                }
+
+                when (label) {
                     "⌫" -> {
-                        budgetDisplay.text = budgetDisplay.text.dropLast(1)
+                        val newText = if (numericPart.isNotEmpty()) {
+                            numericPart.dropLast(1)
+                        } else {
+                            ""
+                        }
+                        budgetDisplay.text = "R" + (if (newText.isEmpty()) "0" else newText)
                     }
                     "." -> {
-                        if (!budgetDisplay.text.contains(".")) {
-                            budgetDisplay.append(".")
+                        if (!numericPart.contains(".")) {
+                            budgetDisplay.text = "R" + (numericPart + ".")
                         }
                     }
                     else -> {
-                        budgetDisplay.append(label)
+                        // Count only digits (exclude any dots)
+                        val digitCount = numericPart.count { it.isDigit() }
+
+                        // Only allow adding digits if there are less than 6
+                        if (digitCount < 6) {
+                            var updatedText = numericPart
+                            if (updatedText == "0") {
+                                updatedText = "" // Remove initial zero
+                            }
+                            updatedText += label
+                            budgetDisplay.text = "R" + updatedText
+                        } else {
+                            Toast.makeText(this, "Maximum 6 digits allowed", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }
         }
     }
+
+
 
     private fun setupButtons() {
         btnConfirmBudget.setOnClickListener {

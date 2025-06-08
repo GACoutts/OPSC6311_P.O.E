@@ -55,8 +55,8 @@ class MonthlyBudget : AppCompatActivity() {
 
         progressBar.progress = percentageUsed
         percentageText.text = "$percentageUsed%"
-        budgetText.text = "Budget: $${budget.toInt()}"
-        spentText.text = "Spent: $${spent.toInt()}"
+        budgetText.text = "Budget: R${budget.toInt()}"
+        spentText.text = "Spent: R${spent.toInt()}"
 
         setupFooter()
         loadCategories()
@@ -171,6 +171,10 @@ class MonthlyBudget : AppCompatActivity() {
                     if (selectedCategory != null) {
                         lifecycleScope.launch {
                             updateCategoryBudget(selectedCategory)
+                            runOnUiThread {
+                                val showingResultsText = findViewById<TextView>(R.id.showingResultsText)
+                                showingResultsText.text = "Showing results for: ${selectedCategory.name}"
+                            }
                         }
                     } else {
                         Toast.makeText(this, "Selected category not found", Toast.LENGTH_SHORT).show()
@@ -178,7 +182,6 @@ class MonthlyBudget : AppCompatActivity() {
                 }
                 dialog.dismiss()
             }
-
         builder.create().show()
     }
 
@@ -207,8 +210,8 @@ class MonthlyBudget : AppCompatActivity() {
         val progressBar = findViewById<ProgressBar>(R.id.progressBar)
         val percentageText = findViewById<TextView>(R.id.percentageText)
 
-        budgetTextView.text = "Budget: R$${goal.toInt()}"
-        spentTextView.text = "Spent: R$${netTotal.toInt()}"
+        budgetTextView.text = "Budget: R${goal.toInt()}"
+        spentTextView.text = "Spent: R${netTotal.toInt()}"
         progressBar.progress = percentageUsed.coerceIn(0, 100)
         percentageText.text = "$percentageUsed%"
     }

@@ -50,7 +50,7 @@
         android:background="@drawable/budget_display_bg"
         android:gravity="end"
         android:padding="16dp"
-        android:text="0"
+        android:text="R0"
         android:textSize="32sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

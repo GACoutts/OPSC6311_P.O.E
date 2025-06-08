@@ -18,17 +18,11 @@
         android:spinnerMode="dropdown" />
 
     <!-- Date Range selector -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Date Range:"
-        android:layout_marginTop="24dp" />
-
     <Button
         android:id="@+id/dateRangeButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Select Date Range"
-        android:backgroundTint="@color/blue"/>
-
+        android:backgroundTint="@color/white"
+        android:textColor="@color/blue"/>
 </LinearLayout>
