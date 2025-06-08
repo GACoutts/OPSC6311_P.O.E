@@ -49,6 +49,17 @@ interface EntryDao {
     @Query("SELECT * FROM entry WHERE date BETWEEN :startDate AND :endDate AND categoryid = :category")
     fun getEntriesBetweenDatesAndCategory(startDate: Long, endDate: Long, category: String): List<Entry>
 
+    @Query("""
+    SELECT * FROM Entry 
+    WHERE date >= :start AND date < :end 
+    AND (:categoryId IS NULL OR categoryid = :categoryId)
+""")
+    suspend fun getEntriesBetweenNowFiltered(
+        start: LocalDateTime,
+        end: LocalDateTime,
+        categoryId: Int?
+    ): List<Entry>
+
     @Update
     suspend fun updateEntry(entry: Entry)
 

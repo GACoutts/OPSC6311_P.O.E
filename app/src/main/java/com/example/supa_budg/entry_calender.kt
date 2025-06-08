@@ -39,6 +39,7 @@ class EntryCalender : AppCompatActivity() {
         val entryDao = db.entryDao()
 
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
+
             val startOfDay = LocalDateTime.of(year, month + 1, dayOfMonth, 0, 0)
             val endOfDay = startOfDay.plusDays(1)
 
@@ -61,9 +62,14 @@ class EntryCalender : AppCompatActivity() {
                     findViewById<TextView>(R.id.incomeValue).text = "R $income"
                     findViewById<TextView>(R.id.expenseValue).text = "R $expense"
                     findViewById<TextView>(R.id.totalValue).text = "R $total"
+
+                    // Update showingResultsDate TextView with nicely formatted date
+                    val showingResultsDate = findViewById<TextView>(R.id.showingResultsDate)
+                    showingResultsDate.text = "Showing results for ${formatDate(dayOfMonth, month, year)}"
                 }
             }
         }
+
 
         val openModalButton = findViewById<Button>(R.id.openModalButton)
         openModalButton.setOnClickListener {
@@ -71,6 +77,54 @@ class EntryCalender : AppCompatActivity() {
         }
 
         setupFooter()
+    }
+
+    private suspend fun applyDateRangeFilter() {
+        if (selectedStartDate == null || selectedEndDate == null) return
+
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val start = LocalDateTime.parse("${selectedStartDate}T00:00:00")
+        val end = LocalDateTime.parse("${selectedEndDate}T00:00:00").plusDays(1)
+
+        val categoryId = getCategoryId(selectedCategory)
+
+        val entries = AppDatabase.getDatabase(applicationContext)
+            .entryDao()
+            .getEntriesBetweenNowFiltered(start, end, categoryId)
+
+        var income = 0
+        var expense = 0
+
+        for (entry in entries) {
+            if (entry.isExpense) {
+                expense += entry.amount
+            } else {
+                income += entry.amount
+            }
+        }
+
+        val total = income - expense
+
+        runOnUiThread {
+            findViewById<TextView>(R.id.incomeValue).text = "R $income"
+            findViewById<TextView>(R.id.expenseValue).text = "R $expense"
+            findViewById<TextView>(R.id.totalValue).text = "R $total"
+
+            val showingResultsDate = findViewById<TextView>(R.id.showingResultsDate)
+            showingResultsDate.text = buildString {
+                append("Results for: $selectedStartDate to $selectedEndDate")
+                selectedCategory?.let {
+                    append(" | Category: $it")
+                }
+            }
+        }
+    }
+
+    private suspend fun getCategoryId(categoryName: String?): Int? {
+        if (categoryName.isNullOrEmpty()) return null
+        val db = AppDatabase.getDatabase(applicationContext)
+        val category = db.categoryDao().getCategoryByName(categoryName)
+        return category?.categoryid
     }
 
     private fun showGraphSettingsModal() {
@@ -108,7 +162,9 @@ class EntryCalender : AppCompatActivity() {
                 startActivity(intent)
             } else {
                 selectedCategory = selected
-                // Add new function here
+                lifecycleScope.launch {
+                    applyDateRangeFilter()
+                }
             }
             dialog.dismiss()
         }
@@ -119,9 +175,9 @@ class EntryCalender : AppCompatActivity() {
     private fun showDateRangePicker() {
         val calendar = Calendar.getInstance()
         val startDateListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
-            selectedStartDate = "${year}-${month + 1}-$dayOfMonth"
+            selectedStartDate = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)
             val endDateListener = DatePickerDialog.OnDateSetListener { _, endYear, endMonth, endDay ->
-                selectedEndDate = "${endYear}-${endMonth + 1}-$endDay"
+                selectedEndDate = String.format("%04d-%02d-%02d", endYear, endMonth + 1, endDay)
                 Toast.makeText(this, "Selected range: $selectedStartDate to $selectedEndDate", Toast.LENGTH_SHORT).show()
             }
 
@@ -144,6 +200,16 @@ class EntryCalender : AppCompatActivity() {
         startDatePicker.setTitle("Select Start Date")
         startDatePicker.show()
     }
+
+    private fun formatDate(day: Int, monthZeroBased: Int, year: Int): String {
+        val months = listOf(
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        )
+        val monthName = months[monthZeroBased]
+        return "$day $monthName"
+    }
+
 
     private fun setupFooter() {
 
