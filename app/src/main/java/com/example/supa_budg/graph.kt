@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.supa_budg.data.AppDatabase
 import com.example.supa_budg.data.CategoryDao
 import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
@@ -25,13 +26,16 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.YearMonth
-import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.collections.ArrayList
 
 class Graph : AppCompatActivity() {
     private lateinit var barChart: BarChart
     private lateinit var resultsTextView: TextView
+
+    private var selectedCategory: String? = null
+    private var selectedStartDate: String? = null
+    private var selectedEndDate: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,87 +51,7 @@ class Graph : AppCompatActivity() {
             showGraphSettingsModal()
         }
 
-        loadBarChartData()
-    }
-
-    private fun loadBarChartData() {
-        lifecycleScope.launch(Dispatchers.IO) {
-            val entryDao = AppDatabase.getDatabase(applicationContext).entryDao()
-
-            // Calculate date range: Past 2 months to Next 2 months
-            val currentMonth = YearMonth.now()
-            val startMonth = currentMonth.minusMonths(2)
-            val endMonth = currentMonth.plusMonths(2)
-
-            val startDate = startMonth.atDay(1).atStartOfDay()
-            val endDate = endMonth.atEndOfMonth().atTime(23, 59, 59)
-
-            val entries = entryDao.getEntriesBetweenNow(startDate, endDate)
-
-            // Group by month
-            val monthlyData = mutableMapOf<YearMonth, Pair<Float, Float>>()  // Income, Expense
-
-            for (entry in entries) {
-                val ym = YearMonth.from(entry.date)
-                val (income, expense) = monthlyData.getOrDefault(ym, Pair(0f, 0f))
-                if (entry.isExpense) {
-                    monthlyData[ym] = Pair(income, expense + entry.amount)
-                } else {
-                    monthlyData[ym] = Pair(income + entry.amount, expense)
-                }
-            }
-
-            // Prepare chart data
-            val barEntries = ArrayList<BarEntry>()
-            val xLabels = ArrayList<String>()
-            var index = 0f
-
-            val sortedMonths = monthlyData.keys.sorted()
-            val monthFormatter = DateTimeFormatter.ofPattern("MMM yyyy")
-
-
-            for (month in sortedMonths) {
-                val data = monthlyData[month]!!
-                barEntries.add(BarEntry(index, floatArrayOf(data.first, data.second)))
-                xLabels.add(month.format(monthFormatter))
-                index += 1f
-            }
-
-            val barDataSet = BarDataSet(barEntries, "Income vs Expense").apply {
-                colors = intArrayOf(
-                    ContextCompat.getColor(this@Graph, R.color.blue),
-                    ContextCompat.getColor(this@Graph, R.color.red)
-                ).toList()
-                stackLabels = arrayOf("Income", "Expense")
-                valueTextColor = Color.BLACK
-                valueTextSize = 12f
-            }
-
-            val barData = BarData(barDataSet)
-            barData.barWidth = 0.4f
-
-            launch(Dispatchers.Main) {
-                barChart.apply {
-                    data = barData
-                    description.isEnabled = false
-                    axisRight.isEnabled = false
-                    xAxis.position = XAxis.XAxisPosition.BOTTOM
-                    xAxis.valueFormatter = IndexAxisValueFormatter(xLabels)
-                    xAxis.granularity = 1f
-                    setFitBars(true)
-                    animateY(1000)
-                    invalidate()
-                }
-            }
-
-            val formatter = DateTimeFormatter.ofPattern("MMMM yyyy")
-
-            val resultsText = "Results for ${startMonth.format(formatter)} - ${endMonth.format(formatter)}"
-
-            runOnUiThread {
-                resultsTextView.text = resultsText
-            }
-        }
+        loadBarChartDataWithGoals()
     }
 
     private fun showGraphSettingsModal() {
@@ -147,8 +71,9 @@ class Graph : AppCompatActivity() {
         builder.setTitle("Graph Settings")
         builder.setView(dialogView)
         builder.setPositiveButton("OK") { dialog, _ ->
-            val selectedCategory = categorySpinner.selectedItem.toString()
-            // TODO: Apply filtering by category
+            selectedCategory = categorySpinner.selectedItem.toString()
+            // Apply filters by category and date range
+            loadBarChartDataWithGoals()
             dialog.dismiss()
         }
         builder.setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
@@ -158,10 +83,10 @@ class Graph : AppCompatActivity() {
     private fun showDateRangePicker() {
         val calendar = Calendar.getInstance()
         val startDateListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
-            val startDate = "${dayOfMonth}/${month + 1}/${year}"
+            selectedStartDate = "${year}-${month + 1}-$dayOfMonth"
             val endDateListener = DatePickerDialog.OnDateSetListener { _, endYear, endMonth, endDay ->
-                val endDate = "${endDay}/${endMonth + 1}/${endYear}"
-                Toast.makeText(this, "Selected range: $startDate - $endDate", Toast.LENGTH_SHORT).show()
+                selectedEndDate = "${endYear}-${endMonth + 1}-$endDay"
+                Toast.makeText(this, "Selected range: $selectedStartDate to $selectedEndDate", Toast.LENGTH_SHORT).show()
             }
 
             val endDatePicker = DatePickerDialog(
@@ -223,10 +148,115 @@ class Graph : AppCompatActivity() {
         }
     }
 
-    suspend fun calculateMinMaxGoals(categoryDao: CategoryDao): Pair<Int, Int> {
-        val categories = categoryDao.getAllCategoriesNow()
-        val totalGoal = categories.sumOf { it.goal }
-        // If goals don't vary, min and max are the same
-        return Pair(totalGoal, totalGoal)
+    private fun loadBarChartDataWithGoals() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val currentMonth = YearMonth.now()
+            val startMonth = currentMonth.minusMonths(2)
+            val endMonth = currentMonth.plusMonths(2)
+
+            val startDate = startMonth.atDay(1).atStartOfDay()
+            val endDate = endMonth.atEndOfMonth().atTime(23, 59, 59)
+
+            val db = AppDatabase.getDatabase(applicationContext)
+            val categoryDao = db.categoryDao()
+            val entryDao = db.entryDao()
+
+            val entries = entryDao.getEntriesBetweenNow(startDate, endDate)
+
+            val categories = categoryDao.getAllCategoriesNow()
+
+            val entriesByMonth = entries.groupBy { YearMonth.from(it.date) }
+
+            val monthlyGoals = mutableMapOf<YearMonth, Int>()
+
+            var month = startMonth
+            while (!month.isAfter(endMonth)) {
+                val monthEntries = entriesByMonth[month].orEmpty()
+                val categoriesInMonth = monthEntries.map { it.categoryid }.toSet()
+
+                val sumGoal = categories.filter { it.categoryid in categoriesInMonth }
+                    .sumOf { it.goal }
+
+                monthlyGoals[month] = sumGoal
+                month = month.plusMonths(1)
+            }
+
+            val goalsList = monthlyGoals.values
+            val minGoal = goalsList.minOrNull() ?: 0
+            val maxGoal = goalsList.maxOrNull() ?: 0
+
+            val barEntries = ArrayList<BarEntry>()
+            val xLabels = ArrayList<String>()
+            var index = 0f
+
+            val monthlyData = mutableMapOf<YearMonth, Pair<Float, Float>>()
+
+            for (entry in entries) {
+                val ym = YearMonth.from(entry.date)
+                val (income, expense) = monthlyData.getOrDefault(ym, Pair(0f, 0f))
+                if (entry.isExpense) {
+                    monthlyData[ym] = Pair(income, expense + entry.amount)
+                } else {
+                    monthlyData[ym] = Pair(income + entry.amount, expense)
+                }
+            }
+
+            val sortedMonths = monthlyData.keys.sorted()
+
+            for (monthKey in sortedMonths) {
+                val data = monthlyData[monthKey]!!
+                barEntries.add(BarEntry(index, floatArrayOf(data.first, data.second)))
+                xLabels.add(monthKey.month.name.substring(0,3))
+                index += 1f
+            }
+
+            val barDataSet = BarDataSet(barEntries, "Income vs Expense").apply {
+                colors = listOf(
+                    ContextCompat.getColor(this@Graph, R.color.blue),
+                    ContextCompat.getColor(this@Graph, R.color.red)
+                )
+                stackLabels = arrayOf("Income", "Expense")
+                valueTextColor = Color.BLACK
+                valueTextSize = 12f
+            }
+
+            val barData = BarData(barDataSet)
+            barData.barWidth = 0.4f
+
+            launch(Dispatchers.Main) {
+                val leftAxis = barChart.axisLeft
+                leftAxis.removeAllLimitLines()
+
+                if (minGoal > 0) {
+                    val minGoalLine = LimitLine(minGoal.toFloat(), "Min Goal")
+                    minGoalLine.lineColor = Color.RED
+                    minGoalLine.lineWidth = 2f
+                    minGoalLine.textColor = Color.RED
+                    minGoalLine.textSize = 12f
+                    leftAxis.addLimitLine(minGoalLine)
+                }
+
+                if (maxGoal > 0 && maxGoal != minGoal) {
+                    val maxGoalLine = LimitLine(maxGoal.toFloat(), "Max Goal")
+                    maxGoalLine.lineColor = Color.GREEN
+                    maxGoalLine.lineWidth = 2f
+                    maxGoalLine.textColor = Color.GREEN
+                    maxGoalLine.textSize = 12f
+                    leftAxis.addLimitLine(maxGoalLine)
+                }
+
+                barChart.apply {
+                    data = barData
+                    description.isEnabled = false
+                    axisRight.isEnabled = false
+                    xAxis.position = XAxis.XAxisPosition.BOTTOM
+                    xAxis.valueFormatter = IndexAxisValueFormatter(xLabels)
+                    xAxis.granularity = 1f
+                    setFitBars(true)
+                    animateY(1000)
+                    invalidate()
+                }
+            }
+        }
     }
 }

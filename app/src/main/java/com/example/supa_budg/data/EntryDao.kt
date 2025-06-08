@@ -46,6 +46,9 @@ interface EntryDao {
         """)
     suspend fun getNetTotalByCategory(categoryId: Int): Double?
 
+    @Query("SELECT * FROM entry WHERE date BETWEEN :startDate AND :endDate AND categoryid = :category")
+    fun getEntriesBetweenDatesAndCategory(startDate: Long, endDate: Long, category: String): List<Entry>
+
     @Update
     suspend fun updateEntry(entry: Entry)
 
