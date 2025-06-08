@@ -27,7 +27,7 @@ data class Entry(
     constructor(parcel: Parcel) : this(
         entryId = parcel.readInt(),
         amount = parcel.readInt(),
-        date = LocalDateTime.parse(parcel.readString()),  // assumes ISO format
+        date = LocalDateTime.parse(parcel.readString()),
         categoryid = parcel.readInt(),
         notes = parcel.readString() ?: "",
         photoUri = parcel.readString(),
@@ -37,7 +37,7 @@ data class Entry(
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(entryId)
         parcel.writeInt(amount)
-        parcel.writeString(date.toString())  // ISO-8601 format
+        parcel.writeString(date.toString())
         parcel.writeInt(categoryid)
         parcel.writeString(notes)
         parcel.writeString(photoUri)
