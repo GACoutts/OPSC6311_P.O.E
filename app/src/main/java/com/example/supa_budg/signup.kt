@@ -9,6 +9,7 @@ import java.util.*
 
 class Signup : AppCompatActivity() {
 
+    private lateinit var name: EditText
     private lateinit var emailInput: EditText
     private lateinit var passwordInput: EditText
     private lateinit var signupButton: Button
@@ -18,6 +19,7 @@ class Signup : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.signup)
 
+        name = findViewById(R.id.usernameField)
         emailInput = findViewById(R.id.emailField)
         passwordInput = findViewById(R.id.passwordField)
         signupButton = findViewById(R.id.loginButton)
@@ -28,6 +30,7 @@ class Signup : AppCompatActivity() {
         signupButton.setOnClickListener {
             val email = emailInput.text.toString().trim().lowercase()
             val password = passwordInput.text.toString().trim()
+            val name = name.text.toString().trim().lowercase()
 
             if (email.isEmpty() || password.length < 6) {
                 Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
@@ -38,6 +41,7 @@ class Signup : AppCompatActivity() {
             val uid = UUID.randomUUID().toString()
 
             val userData = mapOf(
+                "name" to name,
                 "email" to email,
                 "password" to password,
                 "uid" to uid

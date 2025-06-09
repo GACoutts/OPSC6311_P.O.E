@@ -44,7 +44,23 @@ class AddCategory : AppCompatActivity() {
         imagePickerContainer = findViewById(R.id.imagePickerContainer)
 
         val uid = getSharedPreferences("APP_PREFS", MODE_PRIVATE).getString("uid", "") ?: ""
-        dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("categories")
+        val userRootRef = FirebaseDatabase.getInstance().getReference("User")
+
+        userRootRef.orderByChild("uid").equalTo(uid)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        val userKey = snapshot.children.first().key ?: return
+                        dbRef = userRootRef.child(userKey).child("category")
+                    } else {
+                        Toast.makeText(this@AddCategory, "User not found in DB", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(this@AddCategory, "DB error: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
 
 
         imagePickerContainer.setOnClickListener {

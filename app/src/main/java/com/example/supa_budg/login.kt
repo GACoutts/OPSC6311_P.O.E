@@ -42,35 +42,44 @@ class Login : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Query the custom auth path
-            dbRef.child(username).addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        val storedPassword = snapshot.child("password").getValue(String::class.java)
-                        val uid = snapshot.child("uid").getValue(String::class.java)
+            // Query the database by username ("name" field)
+            dbRef.orderByChild("name").equalTo(username)
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        if (snapshot.exists()) {
+                            var loginSuccessful = false
 
-                        if (storedPassword == password && uid != null) {
-                            // Save uid to SharedPreferences
-                            getSharedPreferences("APP_PREFS", MODE_PRIVATE)
-                                .edit()
-                                .putString("uid", uid)
-                                .apply()
+                            for (userSnapshot in snapshot.children) {
+                                val storedPassword = userSnapshot.child("password").getValue(String::class.java)
+                                val uid = userSnapshot.child("uid").getValue(String::class.java)
 
-                            Toast.makeText(this@Login, "Login successful!", Toast.LENGTH_SHORT).show()
-                            startActivity(Intent(this@Login, Dashboard::class.java))
-                            finish()
+                                if (storedPassword == password && uid != null) {
+                                    // Save uid to SharedPreferences
+                                    getSharedPreferences("APP_PREFS", MODE_PRIVATE)
+                                        .edit()
+                                        .putString("uid", uid)
+                                        .apply()
+
+                                    Toast.makeText(this@Login, "Login successful!", Toast.LENGTH_SHORT).show()
+                                    startActivity(Intent(this@Login, Dashboard::class.java))
+                                    finish()
+                                    loginSuccessful = true
+                                    break
+                                }
+                            }
+
+                            if (!loginSuccessful) {
+                                showLoginError()
+                            }
                         } else {
                             showLoginError()
                         }
-                    } else {
-                        showLoginError()
                     }
-                }
 
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@Login, "Database error: ${error.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
+                    override fun onCancelled(error: DatabaseError) {
+                        Toast.makeText(this@Login, "Database error: ${error.message}", Toast.LENGTH_SHORT).show()
+                    }
+                })
         }
 
         registerText.setOnClickListener {
