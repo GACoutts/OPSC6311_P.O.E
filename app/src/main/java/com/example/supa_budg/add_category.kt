@@ -30,6 +30,11 @@ class AddCategory : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.add_category)
 
+        val backButton = findViewById<ImageButton>(R.id.backButton)
+        backButton.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+
         categoryNameInput = findViewById(R.id.categoryNameInput)
         budgetGoalInput = findViewById(R.id.budgetGoalInput)
         saveCategoryButton = findViewById(R.id.saveCategoryButton)
