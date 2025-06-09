@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -37,6 +38,12 @@ class Dashboard : AppCompatActivity() {
         totalAllTime = findViewById(R.id.tvTotalAllTime)
         total7Days = findViewById(R.id.tvTotal7Days)
         total30Days = findViewById(R.id.tvTotal30Days)
+        val settingsIcon = findViewById<ImageView>(R.id.ivSettings)
+
+        settingsIcon.setOnClickListener {
+            val intent = Intent(this, Settings::class.java)
+            startActivity(intent)
+        }
 
         entryRecyclerView.layoutManager = LinearLayoutManager(this)
 
