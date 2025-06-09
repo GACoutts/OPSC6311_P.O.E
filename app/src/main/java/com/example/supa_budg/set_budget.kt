@@ -11,14 +11,13 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 
-class SetMonthyBudget : AppCompatActivity() {
+class SetMonthlyBudget : AppCompatActivity() {
 
     private lateinit var categorySpinner: Spinner
     private lateinit var budgetDisplay: TextView
     private lateinit var btnConfirmBudget: Button
     private lateinit var numberPadButtons: List<Button>
     val db = AppDatabase.getDatabase(this)
-    val categoryDao = db.categoryDao()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +34,7 @@ class SetMonthyBudget : AppCompatActivity() {
         setupSpinner()
         setupNumberPad()
         setupButtons()
+        setupCloseButton()
     }
 
     private fun setupViews() {
@@ -58,6 +58,13 @@ class SetMonthyBudget : AppCompatActivity() {
         )
     }
 
+    private fun setupCloseButton() {
+        val btnClose: ImageButton = findViewById(R.id.btnClose)
+        btnClose.setOnClickListener {
+            finish()
+        }
+    }
+
     private fun setupSpinner() {
         // Observe category data from database
         db.categoryDao().getAllCategories().observe(this) { categoryList ->
@@ -78,17 +85,45 @@ class SetMonthyBudget : AppCompatActivity() {
     private fun setupNumberPad() {
         for (button in numberPadButtons) {
             button.setOnClickListener {
-                when (val label = (it as Button).text.toString()) {
+                val label = (it as Button).text.toString()
+                val currentText = budgetDisplay.text.toString()
+
+                // Remove the leading 'R' to work with the numeric part
+                val numericPart = if (currentText.startsWith("R")) {
+                    currentText.substring(1)
+                } else {
+                    currentText
+                }
+
+                when (label) {
                     "⌫" -> {
-                        budgetDisplay.text = budgetDisplay.text.dropLast(1)
+                        val newText = if (numericPart.isNotEmpty()) {
+                            numericPart.dropLast(1)
+                        } else {
+                            ""
+                        }
+                        budgetDisplay.text = "R" + (if (newText.isEmpty()) "0" else newText)
                     }
                     "." -> {
-                        if (!budgetDisplay.text.contains(".")) {
-                            budgetDisplay.append(".")
+                        if (!numericPart.contains(".")) {
+                            budgetDisplay.text = "R" + (numericPart + ".")
                         }
                     }
                     else -> {
-                        budgetDisplay.append(label)
+                        // Count only digits (exclude any dots)
+                        val digitCount = numericPart.count { it.isDigit() }
+
+                        // Only allow adding digits if there are less than 6
+                        if (digitCount < 6) {
+                            var updatedText = numericPart
+                            if (updatedText == "0") {
+                                updatedText = "" // Remove initial zero
+                            }
+                            updatedText += label
+                            budgetDisplay.text = "R" + updatedText
+                        } else {
+                            Toast.makeText(this, "Maximum 6 digits allowed", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }
@@ -97,7 +132,7 @@ class SetMonthyBudget : AppCompatActivity() {
 
     private fun setupButtons() {
         btnConfirmBudget.setOnClickListener {
-            val goalAmountText = budgetDisplay.text.toString()
+            val goalAmountText = budgetDisplay.text.toString().removePrefix("R")
             val selectedCategory = categorySpinner.selectedItem.toString()
 
             // Validation
@@ -120,13 +155,13 @@ class SetMonthyBudget : AppCompatActivity() {
                     categoryDao.updateGoalByName(selectedCategory, goalAmount.toInt())
 
                     Toast.makeText(
-                        this@SetMonthyBudget,
+                        this@SetMonthlyBudget,
                         "Budget saved: $selectedCategory = R${goalAmount.toInt()}",
                         Toast.LENGTH_SHORT
                     ).show()
                 } catch (e: Exception) {
                     Toast.makeText(
-                        this@SetMonthyBudget,
+                        this@SetMonthlyBudget,
                         "Error saving budget: ${e.message}",
                         Toast.LENGTH_LONG
                     ).show()

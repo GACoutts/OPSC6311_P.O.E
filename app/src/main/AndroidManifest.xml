@@ -47,12 +47,20 @@
             android:exported="false" />
 
         <activity
-            android:name=".SetMonthyBudget"
+            android:name=".SetMonthlyBudget"
             android:exported="false" />
 
         <activity
             android:name=".Graph"
             android:exported="false" />
+
+         <activity
+            android:name=".Achievements"
+             android:exported="false"/>
+
+        <activity
+            android:name=".MonthlyBudget"
+            android:exported="false"/>
 
     </application>
 

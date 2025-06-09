@@ -6,6 +6,7 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -73,11 +74,20 @@ class Dashboard : AppCompatActivity() {
             }
         }
 
+        setupFooter();
+    }
+
+    private fun setupFooter() {
+
         // Footer items
         val homeButton = findViewById<ImageButton>(R.id.footerHome)
         val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
-        val addEntryButton = findViewById<ImageButton>(R.id.footerAddCategory)
+        val addEntryButton = findViewById<ImageButton>(R.id.footerGraph)
         val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
+
+        homeButton.setColorFilter(ContextCompat.getColor(this, R.color.blue))
+        homeButton.setBackgroundResource(R.drawable.footer_button_bg)
+        homeButton.isEnabled = false
 
         homeButton.setOnClickListener {
             val intent = Intent(this, Dashboard::class.java)
@@ -87,7 +97,7 @@ class Dashboard : AppCompatActivity() {
         }
 
         addEntryButton.setOnClickListener {
-            val intent = Intent(this, AddCategory::class.java)
+            val intent = Intent(this, Graph::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
             finish()
@@ -101,7 +111,7 @@ class Dashboard : AppCompatActivity() {
         }
 
         budgetButton.setOnClickListener {
-            val intent = Intent(this, SetMonthyBudget::class.java)
+            val intent = Intent(this, MonthlyBudget::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
             startActivity(intent)
             finish()

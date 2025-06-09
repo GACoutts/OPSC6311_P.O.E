@@ -1,192 +1,177 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     android:padding="16dp">
 
+    <ImageButton
+        android:id="@+id/btnClose"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Close"
+        android:padding="8dp"
+        android:src="@drawable/cross"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/black"/>
+
+    <!-- Monthly budget label at the top -->
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Monthly budgets"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:textSize="24sp"
+        android:textStyle="bold"/>
+
+    <!-- Spinner below label -->
     <Spinner
         android:id="@+id/category_spinner"
         android:layout_width="0dp"
         android:layout_height="48dp"
-        android:layout_marginTop="56dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/textView5" />
 
+    <!-- Budget Display -->
     <TextView
         android:id="@+id/budget_display"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="16dp"
         android:background="@drawable/budget_display_bg"
         android:gravity="end"
         android:padding="16dp"
-        android:text="0"
+        android:text="R0"
         android:textSize="32sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/category_spinner" />
 
+    <!-- Row 1: 1, 2, 3 -->
     <Button
-        android:id="@+id/button_9"
+        android:id="@+id/button_1"
         style="@style/NumberPadButton"
-        android:layout_marginStart="12dp"
         android:layout_marginTop="8dp"
-        android:text="9"
-        app:layout_constraintStart_toEndOf="@id/button_8"
-        app:layout_constraintTop_toTopOf="@id/button_7" />
-
-    <Button
-        android:id="@+id/button_5"
-        style="@style/NumberPadButton"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="4dp"
-        android:text="5"
-        app:layout_constraintStart_toEndOf="@id/button_4"
-        app:layout_constraintTop_toTopOf="@id/button_4" />
+        android:text="1"
+        app:layout_constraintEnd_toStartOf="@id/button_2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/budget_display" />
 
     <Button
         android:id="@+id/button_2"
         style="@style/NumberPadButton"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="4dp"
         android:text="2"
+        app:layout_constraintEnd_toStartOf="@id/button_3"
         app:layout_constraintStart_toEndOf="@id/button_1"
         app:layout_constraintTop_toTopOf="@id/button_1" />
 
     <Button
+        android:id="@+id/button_3"
+        style="@style/NumberPadButton"
+        android:text="3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/button_2"
+        app:layout_constraintTop_toTopOf="@id/button_1" />
+
+    <!-- Row 2: 4, 5, 6 -->
+    <Button
         android:id="@+id/button_4"
         style="@style/NumberPadButton"
-        android:layout_marginStart="84dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="8dp"
         android:text="4"
+        app:layout_constraintEnd_toStartOf="@id/button_5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/button_1" />
 
     <Button
-        android:id="@+id/button_0"
+        android:id="@+id/button_5"
         style="@style/NumberPadButton"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="8dp"
-        android:text="0"
-        app:layout_constraintStart_toEndOf="@id/button_dot"
-        app:layout_constraintTop_toTopOf="@id/button_dot" />
+        android:layout_marginTop="296dp"
+        android:text="5"
+        app:layout_constraintEnd_toStartOf="@id/button_6"
+        app:layout_constraintStart_toEndOf="@id/button_4"
+        app:layout_constraintTop_toTopOf="@id/button_4" />
 
     <Button
-        android:id="@+id/button_dot"
+        android:id="@+id/button_6"
         style="@style/NumberPadButton"
-        android:layout_marginStart="84dp"
-        android:layout_marginTop="8dp"
-        android:text="."
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/button_7" />
+        android:text="6"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/button_5"
+        app:layout_constraintTop_toTopOf="@id/button_4" />
 
+    <!-- Row 3: 7, 8, 9 -->
     <Button
         android:id="@+id/button_7"
         style="@style/NumberPadButton"
-        android:layout_marginStart="84dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="8dp"
         android:text="7"
+        app:layout_constraintEnd_toStartOf="@id/button_8"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/button_4" />
 
     <Button
         android:id="@+id/button_8"
         style="@style/NumberPadButton"
-        android:layout_marginStart="84dp"
-        android:layout_marginTop="8dp"
         android:text="8"
+        app:layout_constraintEnd_toStartOf="@id/button_9"
         app:layout_constraintStart_toEndOf="@id/button_7"
         app:layout_constraintTop_toTopOf="@id/button_7" />
 
     <Button
-        android:id="@+id/button_6"
+        android:id="@+id/button_9"
         style="@style/NumberPadButton"
-        android:layout_marginStart="84dp"
-        android:layout_marginTop="4dp"
-        android:text="6"
-        app:layout_constraintStart_toEndOf="@id/button_5"
-        app:layout_constraintTop_toTopOf="@id/button_4" />
+        android:text="9"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/button_8"
+        app:layout_constraintTop_toTopOf="@id/button_7" />
+
+    <!-- Row 4: ., 0, Backspace -->
+
+    <Button
+        android:id="@+id/button_dot"
+        style="@style/NumberPadButton"
+        android:layout_marginTop="72dp"
+        android:text="."
+        app:layout_constraintEnd_toStartOf="@id/button_0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button_7" />
+
+    <Button
+        android:id="@+id/button_0"
+        style="@style/NumberPadButton"
+        android:layout_marginTop="68dp"
+        android:text="0"
+        app:layout_constraintEnd_toStartOf="@id/button_backspace"
+        app:layout_constraintStart_toEndOf="@id/button_dot"
+        app:layout_constraintTop_toTopOf="@id/button_dot" />
 
     <Button
         android:id="@+id/button_backspace"
         style="@style/NumberPadButton"
-        android:layout_marginStart="84dp"
-        android:layout_marginTop="4dp"
         android:text="⌫"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/button_0"
         app:layout_constraintTop_toTopOf="@id/button_dot" />
 
-    <Button
-        android:id="@+id/button_1"
-        style="@style/NumberPadButton"
-        android:layout_marginStart="84dp"
-        android:layout_marginTop="36dp"
-        android:text="1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/budget_display" />
-
-    <Button
-        android:id="@+id/button_3"
-        style="@style/NumberPadButton"
-        android:layout_marginStart="60dp"
-        android:layout_marginTop="8dp"
-        android:text="3"
-        app:layout_constraintStart_toEndOf="@id/button_2"
-        app:layout_constraintTop_toTopOf="@id/button_1" />
-
-    <TextView
-        android:id="@+id/textView5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:text="Monthly budget for categorys"
-        android:textSize="24sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
-
+    <!-- Submit Button at bottom -->
     <Button
         android:id="@+id/btnConfimBudget"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="176dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
         android:text="Confirm monthly budget"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button_0" />
-
-    <!-- Action Buttons -->
-
-    <!-- Footer -->
-    <View
-        android:id="@+id/footerTopBorder"
-        android:layout_width="0dp"
-        android:layout_height="0.5dp"
-        android:background="#e3e3e3"
-        app:layout_constraintBottom_toTopOf="@id/footerLayout"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <LinearLayout
-        android:id="@+id/footerLayout"
-        android:layout_width="0dp"
-        android:layout_height="75dp"
-        android:orientation="horizontal"
-        android:background="@color/white"
-        android:padding="8dp"
-        android:gravity="center"
-        android:weightSum="4"
-        android:elevation="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-    </LinearLayout>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
