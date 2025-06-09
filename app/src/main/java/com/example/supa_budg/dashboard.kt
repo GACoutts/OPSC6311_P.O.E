@@ -7,26 +7,26 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.supa_budg.data.AppDatabase
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.example.supa_budg.data.Entry
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
+import java.time.Instant
 import java.time.LocalDate
-//import com.example.supa_budg.data.EntryDao
-
+import java.time.ZoneId
+import java.util.*
 
 class Dashboard : AppCompatActivity() {
-
-    private val db by lazy { AppDatabase.getDatabase(this) }
 
     private lateinit var entryRecyclerView: RecyclerView
     private lateinit var addButton: Button
     private lateinit var totalAllTime: TextView
     private lateinit var total7Days: TextView
     private lateinit var total30Days: TextView
+
+    private lateinit var dbRef: DatabaseReference
+    private val uid get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,48 +38,64 @@ class Dashboard : AppCompatActivity() {
         total7Days = findViewById(R.id.tvTotal7Days)
         total30Days = findViewById(R.id.tvTotal30Days)
 
+        entryRecyclerView.layoutManager = LinearLayoutManager(this)
+
         addButton.setOnClickListener {
             startActivity(Intent(this, AddEntry::class.java))
         }
 
-        fun loadDashboardData() {
-            lifecycleScope.launch {
-                val today = LocalDate.now()
-                val last7 = today.minusDays(7)
-                val last30 = today.minusDays(30)
+        dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("entries")
 
-                db.entryDao().getEntriesBetween(last30.atStartOfDay(), today.atTime(23, 59, 59))
-                    .observe(this@Dashboard) {
+        loadDashboardData()
+        setupFooter()
+    }
 
+    private fun loadDashboardData() {
+        dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val entries = mutableListOf<Entry>()
+                for (child in snapshot.children) {
+                    val entry = child.getValue(Entry::class.java)
+                    if (entry != null) {
+                        entries.add(entry)
+                    }
+                }
+
+                updateTotals(entries)
             }
 
-
-                val totalAll = withContext(Dispatchers.IO) {
-                    db.entryDao().getTotalAmount()
-                }
-
-                val total7 = withContext(Dispatchers.IO) {
-                    db.entryDao().getTotalAmountFromDate(last7.toString(), today.toString())
-                }
-
-                val total30 = withContext(Dispatchers.IO) {
-                    db.entryDao().getTotalAmountFromDate(last30.toString(), today.toString())
-                }
-
-
-                // Update text views
-                totalAllTime.text = "All Time: $totalAll"
-                total7Days.text = "Last 7 Days: $total7"
-                total30Days.text = "Last 30 Days: $total30"
+            override fun onCancelled(error: DatabaseError) {
+                totalAllTime.text = "Error loading entries"
+                total7Days.text = ""
+                total30Days.text = ""
             }
+        })
+    }
+
+    private fun updateTotals(entries: List<Entry>) {
+        val today = LocalDate.now()
+        val last7 = today.minusDays(7)
+        val last30 = today.minusDays(30)
+
+        var totalAll = 0
+        var total7 = 0
+        var total30 = 0
+
+        for (entry in entries) {
+            val entryDate = Instant.parse(entry.date.toString()).atZone(ZoneId.systemDefault()).toLocalDate()
+            val amount = if (entry.isExpense) -entry.amount else entry.amount
+
+            totalAll += amount
+            if (entryDate >= last30) total30 += amount
+            if (entryDate >= last7) total7 += amount
         }
 
-        setupFooter();
+        totalAllTime.text = "All Time: R$totalAll"
+        total7Days.text = "Last 7 Days: R$total7"
+        total30Days.text = "Last 30 Days: R$total30"
     }
 
     private fun setupFooter() {
-
-        // Footer items
         val homeButton = findViewById<ImageButton>(R.id.footerHome)
         val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
         val addEntryButton = findViewById<ImageButton>(R.id.footerGraph)
@@ -90,30 +106,22 @@ class Dashboard : AppCompatActivity() {
         homeButton.isEnabled = false
 
         homeButton.setOnClickListener {
-            val intent = Intent(this, Dashboard::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            startActivity(Intent(this, Dashboard::class.java))
             finish()
         }
 
         addEntryButton.setOnClickListener {
-            val intent = Intent(this, Graph::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            startActivity(Intent(this, Graph::class.java))
             finish()
         }
 
         calendarButton.setOnClickListener {
-            val intent = Intent(this, EntryCalender::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            startActivity(Intent(this, EntryCalender::class.java))
             finish()
         }
 
         budgetButton.setOnClickListener {
-            val intent = Intent(this, MonthlyBudget::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            startActivity(Intent(this, MonthlyBudget::class.java))
             finish()
         }
     }

@@ -12,7 +12,7 @@ import com.example.supa_budg.data.Entry
 
 class EntryAdapter(
     private var entries: List<Entry>,
-    private val categoryNameMap: Map<Int, String>
+    private val categoryNameMap: Map<String, String>
     ) : RecyclerView.Adapter<EntryAdapter.EntryViewHolder>() {
 
     inner class EntryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -32,7 +32,7 @@ class EntryAdapter(
     override fun onBindViewHolder(holder: EntryViewHolder, position: Int) {
         val entry = entries[position]
         holder.tvAmount.text = "R ${entry.amount}"
-        //holder.tvDate.text = entry.createdDateFormat
+        holder.tvDate.text = entry.createdDateFormat
         holder.tvCategory.text = categoryNameMap[entry.categoryid] ?: "Unknown Category"
         holder.tvNotes.text = entry.notes
 

@@ -3,23 +3,29 @@ package com.example.supa_budg
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.CalendarView
-import android.widget.ImageButton
-import android.widget.Spinner
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.example.supa_budg.data.AppDatabase
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.example.supa_budg.data.Entry
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
+import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Calendar
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 class EntryCalender : AppCompatActivity() {
+
+    private lateinit var calendarView: CalendarView
+    private lateinit var incomeText: TextView
+    private lateinit var expenseText: TextView
+    private lateinit var totalText: TextView
+    private lateinit var showingDateText: TextView
+
+    private lateinit var dbRef: DatabaseReference
+    private val uid get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     private var selectedCategory: String? = null
     private var selectedStartDate: String? = null
@@ -29,198 +35,178 @@ class EntryCalender : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.income_expense_calender)
 
-        val calendarView = findViewById<CalendarView>(R.id.calendarView)
+        calendarView = findViewById(R.id.calendarView)
+        incomeText = findViewById(R.id.incomeValue)
+        expenseText = findViewById(R.id.expenseValue)
+        totalText = findViewById(R.id.totalValue)
+        showingDateText = findViewById(R.id.showingResultsDate)
 
-        // Set the default date to today
-        val today = Calendar.getInstance().timeInMillis
-        calendarView.date = today
-
-        val db = AppDatabase.getDatabase(this)
-        val entryDao = db.entryDao()
+        dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("entries")
 
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
-
-            val startOfDay = LocalDateTime.of(year, month + 1, dayOfMonth, 0, 0)
-            val endOfDay = startOfDay.plusDays(1)
-
-            lifecycleScope.launch {
-                val entries = entryDao.getEntriesBetweenNow(startOfDay, endOfDay)
-                var income = 0
-                var expense = 0
-
-                for (entry in entries) {
-                    if (entry.isExpense) {
-                        expense += entry.amount
-                    } else {
-                        income += entry.amount
-                    }
-                }
-
-                val total = income - expense
-
-                runOnUiThread {
-                    findViewById<TextView>(R.id.incomeValue).text = "R $income"
-                    findViewById<TextView>(R.id.expenseValue).text = "R $expense"
-                    findViewById<TextView>(R.id.totalValue).text = "R $total"
-
-                    // Update showingResultsDate TextView with nicely formatted date
-                    val showingResultsDate = findViewById<TextView>(R.id.showingResultsDate)
-                    showingResultsDate.text = "Showing results for ${formatDate(dayOfMonth, month, year)}"
-                }
-            }
+            val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
+            loadEntriesForDate(selectedDate)
         }
 
-
-        val openModalButton = findViewById<Button>(R.id.openModalButton)
-        openModalButton.setOnClickListener {
+        findViewById<Button>(R.id.openModalButton).setOnClickListener {
             showGraphSettingsModal()
         }
 
         setupFooter()
     }
 
-    private suspend fun applyDateRangeFilter() {
-        if (selectedStartDate == null || selectedEndDate == null) return
+    private fun loadEntriesForDate(date: LocalDate) {
+        dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var income = 0
+                var expense = 0
 
-        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val start = LocalDateTime.parse("${selectedStartDate}T00:00:00")
-        val end = LocalDateTime.parse("${selectedEndDate}T00:00:00").plusDays(1)
+                for (child in snapshot.children) {
+                    val entry = child.getValue(Entry::class.java) ?: continue
 
-        val categoryId = getCategoryId(selectedCategory)
+                    val entryDate = try {
+                        Instant.parse(entry.date.toString()).atZone(ZoneId.systemDefault()).toLocalDate()
+                    } catch (e: Exception) {
+                        continue
+                    }
 
-        val entries = AppDatabase.getDatabase(applicationContext)
-            .entryDao()
-            .getEntriesBetweenNowFiltered(start, end, categoryId)
-
-        var income = 0
-        var expense = 0
-
-        for (entry in entries) {
-            if (entry.isExpense) {
-                expense += entry.amount
-            } else {
-                income += entry.amount
-            }
-        }
-
-        val total = income - expense
-
-        runOnUiThread {
-            findViewById<TextView>(R.id.incomeValue).text = "R $income"
-            findViewById<TextView>(R.id.expenseValue).text = "R $expense"
-            findViewById<TextView>(R.id.totalValue).text = "R $total"
-
-            val showingResultsDate = findViewById<TextView>(R.id.showingResultsDate)
-            showingResultsDate.text = buildString {
-                append("Results for: $selectedStartDate to $selectedEndDate")
-                selectedCategory?.let {
-                    append(" | Category: $it")
+                    val matchesCategory = selectedCategory == null || selectedCategory == entry.categoryid
+                    if (entryDate == date && matchesCategory) {
+                        if (entry.isExpense) {
+                            expense += entry.amount
+                        } else {
+                            income += entry.amount
+                        }
+                    }
                 }
-            }
-        }
-    }
 
-    private suspend fun getCategoryId(categoryName: String?): Int? {
-        if (categoryName.isNullOrEmpty()) return null
-        val db = AppDatabase.getDatabase(applicationContext)
-        val category = db.categoryDao().getCategoryByName(categoryName)
-        return category?.categoryid
+                val total = income - expense
+
+                incomeText.text = "R $income"
+                expenseText.text = "R $expense"
+                totalText.text = "R $total"
+                showingDateText.text = "Showing results for ${formatDate(date.dayOfMonth, date.monthValue - 1, date.year)}"
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@EntryCalender, "Error loading entries.", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     private fun showGraphSettingsModal() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_graph_settings, null)
         val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
 
-        // Load categories from database
-        lifecycleScope.launch(Dispatchers.IO) {
-            val db = AppDatabase.getDatabase(applicationContext)
-            val categories = db.categoryDao().getAllCategoriesNow().map { it.name }.toMutableList()
+        // Load categories from Firebase
+        val catRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("categories")
+        catRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val categoryNames = mutableListOf<String>()
+                for (child in snapshot.children) {
+                    val name = child.child("name").getValue(String::class.java)
+                    name?.let { categoryNames.add(it) }
+                }
+                categoryNames.add("Add Category")
 
-            // Add "Add Category" option at the end
-            categories.add("Add Category")
-
-            // Switch to Main thread to update UI
-            launch(Dispatchers.Main) {
-                val adapter = ArrayAdapter(this@EntryCalender, android.R.layout.simple_spinner_item, categories)
+                val adapter = ArrayAdapter(this@EntryCalender, android.R.layout.simple_spinner_item, categoryNames)
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 categorySpinner.adapter = adapter
             }
-        }
 
-        val dateRangeButton = dialogView.findViewById<Button>(R.id.dateRangeButton)
-        dateRangeButton.setOnClickListener {
+            override fun onCancelled(error: DatabaseError) {}
+        })
+
+        dialogView.findViewById<Button>(R.id.dateRangeButton).setOnClickListener {
             showDateRangePicker()
         }
 
         val builder = androidx.appcompat.app.AlertDialog.Builder(this)
-        builder.setTitle("Calender Settings")
-        builder.setView(dialogView)
-        builder.setPositiveButton("OK") { dialogInterface, _ ->
-            val selected = categorySpinner.selectedItem.toString()
-            if (selected != "Add Category") {
-                selectedCategory = selected
-                lifecycleScope.launch {
-                    applyDateRangeFilter()
-                }
-            }
-            dialogInterface.dismiss()
-        }
-        builder.setNegativeButton("Cancel") { dialogInterface, _ -> dialogInterface.dismiss() }
-
-        // Show dialog and get reference
-        val dialog = builder.show()
-
-        // Now set spinner listener AFTER dialog.show() so we can dismiss it:
-        categorySpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: android.widget.AdapterView<*>?,
-                view: android.view.View?,
-                position: Int,
-                id: Long
-            ) {
+            .setTitle("Calendar Settings")
+            .setView(dialogView)
+            .setPositiveButton("OK") { dialog, _ ->
                 val selected = categorySpinner.selectedItem.toString()
-                if (selected == "Add Category") {
-                    val intent = Intent(this@EntryCalender, AddCategory::class.java)
-                    startActivity(intent)
-                    dialog.dismiss()
+                if (selected != "Add Category") {
+                    selectedCategory = selected
+                    if (selectedStartDate != null && selectedEndDate != null) {
+                        applyDateRangeFilter()
+                    }
+                } else {
+                    startActivity(Intent(this, AddCategory::class.java))
                 }
+                dialog.dismiss()
             }
+            .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
 
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
-                // No action needed
-            }
-        }
+        val dialog = builder.create()
+        dialog.show()
     }
-
-
 
     private fun showDateRangePicker() {
         val calendar = Calendar.getInstance()
         val startDateListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
             selectedStartDate = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)
-            val endDateListener = DatePickerDialog.OnDateSetListener { _, endYear, endMonth, endDay ->
-                selectedEndDate = String.format("%04d-%02d-%02d", endYear, endMonth + 1, endDay)
+
+            val endDateListener = DatePickerDialog.OnDateSetListener { _, y, m, d ->
+                selectedEndDate = String.format("%04d-%02d-%02d", y, m + 1, d)
                 Toast.makeText(this, "Selected range: $selectedStartDate to $selectedEndDate", Toast.LENGTH_SHORT).show()
+                applyDateRangeFilter()
             }
 
-            val endDatePicker = DatePickerDialog(
-                this, endDateListener,
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            )
-            endDatePicker.setTitle("Select End Date")
-            endDatePicker.show()
+            DatePickerDialog(this, endDateListener, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
         }
 
-        val startDatePicker = DatePickerDialog(
-            this, startDateListener,
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-        startDatePicker.setTitle("Select Start Date")
-        startDatePicker.show()
+        DatePickerDialog(this, startDateListener, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+    }
+
+    private fun applyDateRangeFilter() {
+        if (selectedStartDate == null || selectedEndDate == null) return
+
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val start = LocalDate.parse(selectedStartDate, formatter).atStartOfDay()
+        val end = LocalDate.parse(selectedEndDate, formatter).plusDays(1).atStartOfDay()
+
+        dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var income = 0
+                var expense = 0
+
+                for (child in snapshot.children) {
+                    val entry = child.getValue(Entry::class.java) ?: continue
+
+                    val entryDate = try {
+                        Instant.parse(entry.date.toString()).atZone(ZoneId.systemDefault()).toLocalDateTime()
+                    } catch (e: Exception) {
+                        continue
+                    }
+
+                    val matchesCategory = selectedCategory == null || selectedCategory == entry.categoryid
+
+                    if (entryDate.isAfter(start.minusSeconds(1)) && entryDate.isBefore(end) && matchesCategory) {
+                        if (entry.isExpense) {
+                            expense += entry.amount
+                        } else {
+                            income += entry.amount
+                        }
+                    }
+                }
+
+                val total = income - expense
+
+                incomeText.text = "R $income"
+                expenseText.text = "R $expense"
+                totalText.text = "R $total"
+
+                showingDateText.text = buildString {
+                    append("Results for: $selectedStartDate to $selectedEndDate")
+                    selectedCategory?.let { append(" | Category: $it") }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@EntryCalender, "Error filtering entries.", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     private fun formatDate(day: Int, monthZeroBased: Int, year: Int): String {
@@ -228,14 +214,10 @@ class EntryCalender : AppCompatActivity() {
             "January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
         )
-        val monthName = months[monthZeroBased]
-        return "$day $monthName"
+        return "$day ${months[monthZeroBased]}, $year"
     }
 
-
     private fun setupFooter() {
-
-        // Footer items
         val homeButton = findViewById<ImageButton>(R.id.footerHome)
         val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
         val addEntryButton = findViewById<ImageButton>(R.id.footerGraph)
@@ -243,33 +225,25 @@ class EntryCalender : AppCompatActivity() {
 
         calendarButton.setColorFilter(ContextCompat.getColor(this, R.color.blue))
         calendarButton.setBackgroundResource(R.drawable.footer_button_bg)
-        calendarButton.isEnabled = false;
+        calendarButton.isEnabled = false
 
         homeButton.setOnClickListener {
-            val intent = Intent(this, Dashboard::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            startActivity(Intent(this, Dashboard::class.java))
             finish()
         }
 
         addEntryButton.setOnClickListener {
-            val intent = Intent(this, Graph::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            startActivity(Intent(this, Graph::class.java))
             finish()
         }
 
         calendarButton.setOnClickListener {
-            val intent = Intent(this, EntryCalender::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            startActivity(Intent(this, EntryCalender::class.java))
             finish()
         }
 
         budgetButton.setOnClickListener {
-            val intent = Intent(this, MonthlyBudget::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+            startActivity(Intent(this, MonthlyBudget::class.java))
             finish()
         }
     }

@@ -58,6 +58,43 @@ class AddCategory : AppCompatActivity() {
                 else -> checkIfCategoryExists(categoryName, imageUrl, budgetGoal)
             }
         }
+        /*
+
+        // Footer buttons setup
+        val homeButton = findViewById<ImageButton>(R.id.footerHome)
+        val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
+        val addEntryButton = findViewById<ImageButton>(R.id.footerAddCategory)
+        val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
+
+        homeButton.setOnClickListener {
+            val intent = Intent(this, Dashboard::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        addEntryButton.setOnClickListener {
+            val intent = Intent(this, AddCategory::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        calendarButton.setOnClickListener {
+            val intent = Intent(this, EntryCalender::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        budgetButton.setOnClickListener {
+            val intent = Intent(this, SetMonthyBudget::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+            finish()
+        }
+         */
+
     }
 
     private fun checkIfCategoryExists(name: String, imageUrl: String, goal: Int) {
@@ -99,59 +136,10 @@ class AddCategory : AppCompatActivity() {
         errorText.text = ""
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == IMAGE_PICK_REQUEST_CODE && resultCode == RESULT_OK) {
-            selectedImageUri = data?.data
-            imageFileName.text = selectedImageUri.toString()
-        }
-    }
-
     private fun showError(message: String) {
         errorText.text = message
         errorText.setTextColor(getColor(R.color.red))
         errorText.visibility = TextView.VISIBLE
-    }
-
-
-        // Footer items
-        val homeButton = findViewById<ImageButton>(R.id.footerHome)
-        val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
-        val addEntryButton = findViewById<ImageButton>(R.id.footerAddCategory)
-        val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
-
-        homeButton.setOnClickListener {
-            val intent = Intent(this, Dashboard::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        addEntryButton.setOnClickListener {
-            val intent = Intent(this, AddCategory::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        calendarButton.setOnClickListener {
-            val intent = Intent(this, EntryCalender::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        budgetButton.setOnClickListener {
-            val intent = Intent(this, SetMonthyBudget::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-
-    private fun openImagePicker() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        startActivityForResult(intent, IMAGE_PICK_REQUEST_CODE)
     }
 
     // Handling the result of the image picker activity
