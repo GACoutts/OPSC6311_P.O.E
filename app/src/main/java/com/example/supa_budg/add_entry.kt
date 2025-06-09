@@ -6,38 +6,33 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
-import android.widget.ToggleButton
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-
 import com.example.supa_budg.data.Entry
-
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
-import java.util.Date
+import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.*
 
 class AddEntry : AppCompatActivity() {
 
-    // Variables
     private lateinit var dateText: TextView
     private lateinit var attachPhotoText: TextView
+    private lateinit var dbRef: DatabaseReference
+
+    private val uid get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     private val pickImageRequest = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.add_income_expense)
 
-        // Get Fields
         val toggleButton = findViewById<ToggleButton>(R.id.toggleButton)
         val amountPrefix = findViewById<TextView>(R.id.currencyPrefix)
         val amountInput = findViewById<EditText>(R.id.amountInput)
@@ -50,85 +45,38 @@ class AddEntry : AppCompatActivity() {
         dateText = findViewById(R.id.dateText)
         attachPhotoText = findViewById(R.id.attachPhoto)
 
-        // Amount field
-        val amountText = amountInput.text.toString()
-        val amount = amountText.toDoubleOrNull() ?: 0.0
+        dbRef = FirebaseDatabase.getInstance().getReference("user").child(uid)
 
-        // Database fields
-        val db = AppDatabase.getDatabase(applicationContext)
-        val categoryDao = db.categoryDao()
-
-        var isExpense = true
-
-        // Set default date
         val calendar = Calendar.getInstance()
-        updateDateText(calendar, dateText)
+        updateDateText(calendar)
 
-        // Set today's date
-        val currentDate = SimpleDateFormat("MMM dd yyyy", Locale.getDefault()).format(Date())
-        dateText.text = currentDate
-
-        // Toggle logic
         toggleButton.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 toggleButton.text = getString(R.string.hint_income)
                 amountPrefix.text = "R"
-                isExpense = false
             } else {
                 toggleButton.text = getString(R.string.hint_expense)
                 amountPrefix.text = "- R"
-                isExpense = true
             }
         }
 
-        // Show DatePicker on calendar icon click
         calendarRow.setOnClickListener {
             val year = calendar.get(Calendar.YEAR)
             val month = calendar.get(Calendar.MONTH)
             val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-            val datePickerDialog = DatePickerDialog(
-                this,
-                { _, selectedYear, selectedMonth, selectedDay ->
-                    calendar.set(Calendar.YEAR, selectedYear)
-                    calendar.set(Calendar.MONTH, selectedMonth)
-                    calendar.set(Calendar.DAY_OF_MONTH, selectedDay)
-                    updateDateText(calendar, dateText)
-                },
-                year,
-                month,
-                day
-            )
-
-            datePickerDialog.show()
+            DatePickerDialog(this, { _, y, m, d ->
+                calendar.set(y, m, d)
+                updateDateText(calendar)
+            }, year, month, day).show()
         }
 
-        // When pressing on the attach photo open up image model
         attachPhotoRow.setOnClickListener {
             val intent = Intent(Intent.ACTION_GET_CONTENT)
             intent.type = "image/*"
             startActivityForResult(Intent.createChooser(intent, "Select Picture"), pickImageRequest)
         }
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.relativeLayout)) { view, insets ->
-            val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-            view.setPadding(
-                view.paddingLeft,
-                statusBarHeight,
-                view.paddingRight,
-                view.paddingBottom
-            )
-            insets
-        }
-
-        backButton.setOnClickListener {
-            val intent = Intent(this, Dashboard::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        // Submit an enityy
         checkButton.setOnClickListener {
             val amountText = amountInput.text.toString()
             val amount = amountText.toDoubleOrNull()?.toInt() ?: 0
@@ -136,132 +84,137 @@ class AddEntry : AppCompatActivity() {
             val selectedDateStr = dateText.text.toString()
             val selectedDate = SimpleDateFormat("MMM dd yyyy", Locale.getDefault()).parse(selectedDateStr)
             val photoUri = attachPhotoText.text.toString().takeIf { it != getString(R.string.hint_image) }
-            val selectedCategory = categoryTextView.text.toString()
+            val selectedCategoryName = categoryTextView.text.toString()
+            val isExpense = !toggleButton.isChecked
 
             // Validation
             when {
-                amount <= 0 -> {
-                    errorText.text = "Please enter a valid amount greater than 0."
-                    errorText.setTextColor(getColor(R.color.red))
-                    errorText.visibility = TextView.VISIBLE
-                    return@setOnClickListener
-                }
-
-                selectedDate == null -> {
-                    errorText.text = "Please select a valid date."
-                    errorText.setTextColor(getColor(R.color.red))
-                    errorText.visibility = TextView.VISIBLE
-                    return@setOnClickListener
-                }
-
-                selectedCategory == getString(R.string.hint_category) -> {
-                    errorText.text = "Please select a category."
-                    errorText.setTextColor(getColor(R.color.red))
-                    errorText.visibility = TextView.VISIBLE
-                    return@setOnClickListener
-                }
-
-                photoUri == null -> {
-                    errorText.text = "Please attach a photo."
-                    errorText.setTextColor(getColor(R.color.red))
-                    errorText.visibility = TextView.VISIBLE
-                    return@setOnClickListener
-                }
+                amount <= 0 -> return@setOnClickListener showError(errorText, "Please enter a valid amount.")
+                selectedDate == null -> return@setOnClickListener showError(errorText, "Invalid date.")
+                selectedCategoryName == getString(R.string.hint_category) -> return@setOnClickListener showError(errorText, "Please select a category.")
+                photoUri == null -> return@setOnClickListener showError(errorText, "Please attach a photo.")
             }
 
-            // All validations passed
             errorText.visibility = TextView.GONE
 
-            val localDate = selectedDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
-
+            // Save to Firebase
             lifecycleScope.launch {
-                val categories = categoryDao.getAllCategoriesNow()
-                val category = categories.find { it.name == selectedCategory }
+                try {
+                    val categorySnapshot = dbRef.child("Category")
+                        .orderByChild("name")
+                        .equalTo(selectedCategoryName)
+                        .get()
+                        .await()
 
-                if (category == null) {
-                    runOnUiThread {
-                        errorText.text = "Selected category not found."
-                        errorText.setTextColor(getColor(R.color.red))
-                        errorText.visibility = TextView.VISIBLE
+                    if (!categorySnapshot.exists()) {
+                        showError(errorText, "Selected category not found.")
+                        return@launch
                     }
-                    return@launch
-                }
 
-                val newEntry = Entry(
-                    amount = amount,
-                    date = localDate,
-                    categoryid = category.categoryid,
-                    notes = notes,
-                    photoUri = photoUri,
-                    isExpense = !toggleButton.isChecked
-                )
+                    val categoryId = categorySnapshot.children.first().key ?: ""
 
-                val entryDao = db.entryDao()
-                entryDao.insertEntry(newEntry)
+                    val entryId = dbRef.child("Entry").push().key ?: return@launch
+                    val entryDate = selectedDate.toInstant().toString()
 
-                runOnUiThread {
-                    Toast.makeText(this@AddEntry, "Entry saved!", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this@AddEntry, Dashboard::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-                    startActivity(intent)
-                    finish()
+                    val newEntry = Entry(
+                        entryId = entryId,
+                        amount = amount,
+                        date = entryDate,
+                        categoryid = categoryId,
+                        notes = notes,
+                        photoUri = photoUri,
+                        isExpense = isExpense
+                    )
+
+                    dbRef.child("entries").child(entryId).setValue(newEntry).addOnSuccessListener {
+                        Toast.makeText(this@AddEntry, "Entry saved!", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this@AddEntry, Dashboard::class.java))
+                        finish()
+                    }
+
+                } catch (e: Exception) {
+                    showError(errorText, "Error: ${e.message}")
                 }
             }
         }
 
-
-        // Select category modal
         categoryTextView.setOnClickListener {
             lifecycleScope.launch {
-                val categories = categoryDao.getAllCategoriesNow()
-                val categoryNames = categories.map { it.name }.toMutableList()
-                categoryNames.add("Add Category")
+                try {
+                    val snapshot = dbRef.child("categories").get().await()
+                    val categories = snapshot.children.mapNotNull {
+                        it.child("name").getValue(String::class.java)
+                    }.toMutableList()
 
-                runOnUiThread {
-                    val builder = AlertDialog.Builder(this@AddEntry)
-                    builder.setTitle("Select Category")
-                    builder.setItems(categoryNames.toTypedArray()) { _, which ->
-                        if (which == categoryNames.size - 1) {
-                            // User chose "Add Category"
-                            val intent = Intent(this@AddEntry, AddCategory::class.java)
-                            startActivity(intent)
-                        } else {
-                            // User chose an existing category
-                            categoryTextView.text = categoryNames[which]
-                            errorText.visibility = TextView.GONE
+                    categories.add("Add Category")
+
+                    runOnUiThread {
+                        val builder = AlertDialog.Builder(this@AddEntry)
+                        builder.setTitle("Select Category")
+                        builder.setItems(categories.toTypedArray()) { _, which ->
+                            if (which == categories.lastIndex) {
+                                startActivity(Intent(this@AddEntry, AddCategory::class.java))
+                            } else {
+                                categoryTextView.text = categories[which]
+                                errorText.visibility = TextView.GONE
+                            }
                         }
+                        builder.show()
                     }
-                    builder.show()
+
+                } catch (e: Exception) {
+                    showError(errorText, "Failed to load categories.")
                 }
             }
         }
 
+        backButton.setOnClickListener {
+            startActivity(Intent(this, Dashboard::class.java))
+            finish()
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.relativeLayout)) { view, insets ->
+            view.setPadding(
+                view.paddingLeft,
+                insets.getInsets(WindowInsetsCompat.Type.statusBars()).top,
+                view.paddingRight,
+                view.paddingBottom
+            )
+            insets
+        }
     }
 
-    private fun updateDateText(calendar: Calendar, textView: TextView) {
+    private fun updateDateText(calendar: Calendar) {
         val format = SimpleDateFormat("MMM dd yyyy", Locale.getDefault())
-        textView.text = format.format(calendar.time)
+        dateText.text = format.format(calendar.time)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == pickImageRequest && resultCode == RESULT_OK && data != null && data.data != null) {
-            val uri: Uri = data.data!!
+        if (requestCode == pickImageRequest && resultCode == RESULT_OK && data?.data != null) {
+            val uri = data.data!!
             val fileName = getFileNameFromUri(uri)
             attachPhotoText.text = fileName
         }
     }
 
-        private fun getFileNameFromUri(uri: Uri): String {
-            var name = "Selected Photo"
-            val cursor = contentResolver.query(uri, null, null, null, null)
-            cursor?.use {
-                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (it.moveToFirst() && nameIndex >= 0) {
-                    name = it.getString(nameIndex)
-                }
+    private fun getFileNameFromUri(uri: Uri): String {
+        var name = "Selected Photo"
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (it.moveToFirst() && nameIndex >= 0) {
+                name = it.getString(nameIndex)
             }
-            return name
         }
+        return name
+    }
+
+    private fun showError(textView: TextView, message: String) {
+        runOnUiThread {
+            textView.text = message
+            textView.setTextColor(getColor(R.color.red))
+            textView.visibility = TextView.VISIBLE
+        }
+    }
 }

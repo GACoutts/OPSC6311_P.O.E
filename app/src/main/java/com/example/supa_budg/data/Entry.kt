@@ -2,30 +2,25 @@ package com.example.supa_budg.data
 
 import android.os.Parcel
 import android.os.Parcelable
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@Entity(tableName = "Entry", foreignKeys = [
-    ForeignKey(entity = Category::class, parentColumns = ["categoryid"], childColumns = ["categoryid"])
-])
+
 data class Entry(
-    @PrimaryKey(autoGenerate = true) val entryId: Int = 0,
-    val amount: Int,
-    val date: LocalDateTime = LocalDateTime.now(),
-    val categoryid: Int,
-    val notes: String,
-    val photoUri: String? = null,
-    val isExpense: Boolean
+    var entryId: String ? = null,
+    var amount: Int,
+    var date: LocalDateTime = LocalDateTime.now(),
+    var categoryid: Int,
+    var notes: String,
+    var photoUri: String? = null,
+    var isExpense: Boolean
 ) : Parcelable {
 
     val createdDateFormat: String
         get() = date.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
 
     constructor(parcel: Parcel) : this(
-        entryId = parcel.readInt(),
+        entryId = parcel.readString(),
         amount = parcel.readInt(),
         date = LocalDateTime.parse(parcel.readString()),
         categoryid = parcel.readInt(),
@@ -35,7 +30,7 @@ data class Entry(
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(entryId)
+        parcel.writeString(entryId)
         parcel.writeInt(amount)
         parcel.writeString(date.toString())
         parcel.writeInt(categoryid)

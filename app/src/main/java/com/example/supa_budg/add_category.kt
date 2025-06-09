@@ -4,18 +4,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.supa_budg.data.Category
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import kotlinx.coroutines.launch
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 
 class AddCategory : AppCompatActivity() {
 
@@ -29,71 +22,97 @@ class AddCategory : AppCompatActivity() {
 
     private val IMAGE_PICK_REQUEST_CODE = 1001
     private var selectedImageUri: Uri? = null
+
     private lateinit var dbRef: DatabaseReference
+    private val uid get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.add_category)
 
-        // Initialize views
         categoryNameInput = findViewById(R.id.categoryNameInput)
-        imagePickerContainer = findViewById(R.id.imagePickerContainer)
-        imagePicker = findViewById(R.id.imagePicker)
-        imageFileName = findViewById(R.id.imageFileName)
         budgetGoalInput = findViewById(R.id.budgetGoalInput)
         saveCategoryButton = findViewById(R.id.saveCategoryButton)
         errorText = findViewById(R.id.errorText)
+        imageFileName = findViewById(R.id.imageFileName)
+        imagePicker = findViewById(R.id.imagePicker)
+        imagePickerContainer = findViewById(R.id.imagePickerContainer)
 
-        dbRef = FirebaseDatabase.getInstance().getReference("Category")
+        dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("categories")
 
-        // Set the click listener for the image picker container
         imagePickerContainer.setOnClickListener {
-            openImagePicker()
+            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            startActivityForResult(intent, IMAGE_PICK_REQUEST_CODE)
         }
 
-        // Set the click listener for the save button
         saveCategoryButton.setOnClickListener {
             val categoryName = categoryNameInput.text.toString().trim()
             val imageUrl = selectedImageUri?.toString() ?: ""
             val budgetGoal = budgetGoalInput.text.toString().toIntOrNull()
 
+            when {
+                categoryName.isEmpty() -> showError("Category name cannot be empty.")
+                categoryName.length <= 4 -> showError("Category name must be longer than 4 characters.")
+                categoryName.any { it.isDigit() } -> showError("Category name cannot contain numbers.")
+                budgetGoal == null || budgetGoal < 0 -> showError("Please enter a valid, non-negative budget goal.")
+                else -> checkIfCategoryExists(categoryName, imageUrl, budgetGoal)
+            }
+        }
+    }
 
-
-                // Validation logic
-                when {
-                    categoryName.isEmpty() -> showError(errorText, "Category name cannot be empty.")
-                    categoryName.length <= 4 -> showError(errorText, "Category name must be longer than 4 characters.")
-                    categoryName.any { it.isDigit() } -> showError(errorText, "Category name cannot contain numbers.")
-                    // Figure out how to check from in the database(Video 4 ) .getCategoryByName(categoryName) != null -> showError(errorText, "Category already exists.")
-                    budgetGoal == null -> showError(errorText, "Please enter a valid budget goal.")
-                    budgetGoal < 0 -> showError(errorText, "Budget goal cannot be negative.")
-                    else -> {
-                        // Category does not exist, proceed with saving
-                        val catid = dbRef.push().key!!
-                        val newCategory = Category(
-                            categoryid = catid,
-                            name = categoryName,
-                            imageUrl = imageUrl,
-                            goal = budgetGoal
-                        )
-                        dbRef.child(catid).setValue(newCategory)
-                            .addOnCompleteListener{
-                                runOnUiThread {
-                                    errorText.text = "Category added successfully."
-                                    errorText.setTextColor(getColor(R.color.green))
-                                    errorText.visibility = TextView.VISIBLE
-
-                                    categoryNameInput.text.clear()
-                                    budgetGoalInput.text.clear()
-                                    imageFileName.text = ""
-                                    selectedImageUri = null
-                                }
-                            }
-
-
+    private fun checkIfCategoryExists(name: String, imageUrl: String, goal: Int) {
+        dbRef.orderByChild("name").equalTo(name)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        showError("Category already exists.")
+                    } else {
+                        saveCategory(name, imageUrl, goal)
                     }
                 }
+
+                override fun onCancelled(error: DatabaseError) {
+                    showError("Database error: ${error.message}")
+                }
+            })
+    }
+
+    private fun saveCategory(name: String, imageUrl: String, goal: Int) {
+        val catId = dbRef.push().key!!
+        val newCategory = Category(catId, name, imageUrl, goal)
+
+        dbRef.child(catId).setValue(newCategory).addOnCompleteListener {
+            if (it.isSuccessful) {
+                Toast.makeText(this, "Category added successfully", Toast.LENGTH_SHORT).show()
+                clearForm()
+            } else {
+                showError("Failed to save category.")
+            }
         }
+    }
+
+    private fun clearForm() {
+        categoryNameInput.text.clear()
+        budgetGoalInput.text.clear()
+        imageFileName.text = ""
+        selectedImageUri = null
+        errorText.text = ""
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == IMAGE_PICK_REQUEST_CODE && resultCode == RESULT_OK) {
+            selectedImageUri = data?.data
+            imageFileName.text = selectedImageUri.toString()
+        }
+    }
+
+    private fun showError(message: String) {
+        errorText.text = message
+        errorText.setTextColor(getColor(R.color.red))
+        errorText.visibility = TextView.VISIBLE
+    }
+
 
         // Footer items
         val homeButton = findViewById<ImageButton>(R.id.footerHome)
@@ -128,7 +147,7 @@ class AddCategory : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-    }
+
 
     private fun openImagePicker() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
