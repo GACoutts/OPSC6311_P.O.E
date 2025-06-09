@@ -130,11 +130,9 @@ class SetMonthlyBudget : AppCompatActivity() {
         }
     }
 
-
-
     private fun setupButtons() {
         btnConfirmBudget.setOnClickListener {
-            val goalAmountText = budgetDisplay.text.toString()
+            val goalAmountText = budgetDisplay.text.toString().removePrefix("R")
             val selectedCategory = categorySpinner.selectedItem.toString()
 
             // Validation
