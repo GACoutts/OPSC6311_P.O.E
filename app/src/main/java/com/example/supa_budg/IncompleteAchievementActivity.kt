@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import nl.dionsegijn.konfetti.xml.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
@@ -12,11 +13,7 @@ import nl.dionsegijn.konfetti.core.emitter.Emitter
 import nl.dionsegijn.konfetti.core.models.Shape
 import java.util.concurrent.TimeUnit
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import android.widget.Toast
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-
+import com.google.firebase.database.*
 
 class IncompleteAchievementActivity : AppCompatActivity() {
 
@@ -28,14 +25,13 @@ class IncompleteAchievementActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_incomplete_achievement)
 
-        // Find views from XML layout
+        // Find views
         val titleText = findViewById<TextView>(R.id.lockedAchievementTitle)
         val descriptionText = findViewById<TextView>(R.id.lockedAchievementDescription)
         val completeButton = findViewById<Button>(R.id.completeButton)
         val closeButton = findViewById<ImageButton>(R.id.closeButton)
-        dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("categories")
 
-        // Create and inject konfetti view into layout
+        // Create konfetti view
         konfettiView = KonfettiView(this)
         addContentView(
             konfettiView,
@@ -45,7 +41,7 @@ class IncompleteAchievementActivity : AppCompatActivity() {
             )
         )
 
-        // Populate title and description from intent
+        // Get data from intent
         val title = intent.getStringExtra("title") ?: "Locked Achievement"
         val description = intent.getStringExtra("description") ?: "Achievement details missing."
 
@@ -54,42 +50,59 @@ class IncompleteAchievementActivity : AppCompatActivity() {
 
         // Close button functionality
         closeButton.setOnClickListener {
-            finish() // Closes this activity and returns to previous screen
+            finish()
         }
 
-        // Confetti on "Completed" button click
+        // Confetti and DB update logic
         completeButton.setOnClickListener {
-            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@setOnClickListener
+            if (uid.isEmpty()) return@setOnClickListener
 
-            FirebaseFirestore.getInstance()
-                .collection("incomes")
-                .whereEqualTo("userId", userId)
-                .get()
-                .addOnSuccessListener { documents ->
-                    if (!documents.isEmpty) {
-                        // Show confetti
-                        konfettiView.start(/* confetti setup */)
+            val incomesRef = FirebaseDatabase.getInstance()
+                .getReference("users")
+                .child(uid)
+                .child("incomes")
 
-                        // Update Firestore achievements collection
-                        FirebaseFirestore.getInstance()
-                            .collection("achievements")
-                            .document("add_income_$userId") // example ID
-                            .set(
-                                mapOf(
-                                    "title" to "Added an Income",
-                                    "description" to "You've successfully added an income entry!",
-                                    "iscompleted" to true,
-                                    "userId" to userId,
-                                    "category" to "income"
-                                )
+            incomesRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        // Show konfetti
+                        konfettiView.start(
+                            Party(
+                                speed = 0f to 30f,
+                                maxSpeed = 50f,
+                                damping = 0.9f,
+                                spread = 360,
+                                colors = listOf(0xFFF44336.toInt(), 0xFF4CAF50.toInt(), 0xFF2196F3.toInt()),
+                                emitter = Emitter(duration = 1, TimeUnit.SECONDS).perSecond(100),
+                                position = Position.Relative(0.5, 0.3),
+                                shapes = listOf(Shape.Circle, Shape.Square)
                             )
+                        )
 
-                        // You can also navigate back or update UI state
+                        // Update Realtime Database with achievement
+                        val achievementRef = FirebaseDatabase.getInstance()
+                            .getReference("users")
+                            .child(uid)
+                            .child("achievements")
+                            .child("add_income")
+
+                        val achievementData = mapOf(
+                            "title" to "Added an Income",
+                            "description" to "You've successfully added an income entry!",
+                            "iscompleted" to true,
+                            "category" to "income"
+                        )
+
+                        achievementRef.setValue(achievementData)
                     } else {
-                        Toast.makeText(this, "No income found. Please add an income first.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@IncompleteAchievementActivity, "No income found. Please add an income first.", Toast.LENGTH_SHORT).show()
                     }
                 }
-        }
 
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(this@IncompleteAchievementActivity, "Error checking incomes.", Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
     }
 }
