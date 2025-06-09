@@ -19,7 +19,7 @@ import java.util.Locale
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import com.example.supa_budg.data.AppDatabase
+
 import com.example.supa_budg.data.Entry
 import com.example.supa_budg.data.EntryDao
 import kotlinx.coroutines.launch
