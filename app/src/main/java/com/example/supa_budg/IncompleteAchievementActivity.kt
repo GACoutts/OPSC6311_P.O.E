@@ -68,7 +68,7 @@ class IncompleteAchievementActivity : AppCompatActivity() {
                         // Show konfetti
                         konfettiView.start(
                             Party(
-                                speed = 0f to 30f,
+                                speed =  30f,
                                 maxSpeed = 50f,
                                 damping = 0.9f,
                                 spread = 360,
