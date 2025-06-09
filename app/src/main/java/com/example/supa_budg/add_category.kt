@@ -38,7 +38,9 @@ class AddCategory : AppCompatActivity() {
         imagePicker = findViewById(R.id.imagePicker)
         imagePickerContainer = findViewById(R.id.imagePickerContainer)
 
-        dbRef = FirebaseDatabase.getInstance().getReference("User").child(uid).child("Category")
+        val uid = getSharedPreferences("APP_PREFS", MODE_PRIVATE).getString("uid", "") ?: ""
+        dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("categories")
+
 
         imagePickerContainer.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
