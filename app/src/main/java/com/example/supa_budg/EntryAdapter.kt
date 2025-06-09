@@ -32,7 +32,7 @@ class EntryAdapter(
     override fun onBindViewHolder(holder: EntryViewHolder, position: Int) {
         val entry = entries[position]
         holder.tvAmount.text = "R ${entry.amount}"
-        holder.tvDate.text = entry.createdDateFormat
+        //holder.tvDate.text = entry.createdDateFormat
         holder.tvCategory.text = categoryNameMap[entry.categoryid] ?: "Unknown Category"
         holder.tvNotes.text = entry.notes
 

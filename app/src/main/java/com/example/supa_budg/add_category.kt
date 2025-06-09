@@ -12,9 +12,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import com.example.supa_budg.data.AppDatabase
 import com.example.supa_budg.data.Category
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
 
 class AddCategory : AppCompatActivity() {
@@ -29,6 +29,7 @@ class AddCategory : AppCompatActivity() {
 
     private val IMAGE_PICK_REQUEST_CODE = 1001
     private var selectedImageUri: Uri? = null
+    private lateinit var dbRef: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +44,8 @@ class AddCategory : AppCompatActivity() {
         saveCategoryButton = findViewById(R.id.saveCategoryButton)
         errorText = findViewById(R.id.errorText)
 
+        dbRef = FirebaseDatabase.getInstance().getReference("Category")
+
         // Set the click listener for the image picker container
         imagePickerContainer.setOnClickListener {
             openImagePicker()
@@ -54,40 +57,42 @@ class AddCategory : AppCompatActivity() {
             val imageUrl = selectedImageUri?.toString() ?: ""
             val budgetGoal = budgetGoalInput.text.toString().toIntOrNull()
 
-            lifecycleScope.launch {
-                val db = AppDatabase.getDatabase(applicationContext)
-                val categoryDao = db.categoryDao()
+
 
                 // Validation logic
                 when {
                     categoryName.isEmpty() -> showError(errorText, "Category name cannot be empty.")
                     categoryName.length <= 4 -> showError(errorText, "Category name must be longer than 4 characters.")
                     categoryName.any { it.isDigit() } -> showError(errorText, "Category name cannot contain numbers.")
-                    categoryDao.getCategoryByName(categoryName) != null -> showError(errorText, "Category already exists.")
+                    // Figure out how to check from in the database(Video 4 ) .getCategoryByName(categoryName) != null -> showError(errorText, "Category already exists.")
                     budgetGoal == null -> showError(errorText, "Please enter a valid budget goal.")
                     budgetGoal < 0 -> showError(errorText, "Budget goal cannot be negative.")
                     else -> {
                         // Category does not exist, proceed with saving
+                        val catid = dbRef.push().key!!
                         val newCategory = Category(
+                            categoryid = catid,
                             name = categoryName,
                             imageUrl = imageUrl,
                             goal = budgetGoal
                         )
-                        categoryDao.insertCategory(newCategory)
+                        dbRef.child(catid).setValue(newCategory)
+                            .addOnCompleteListener{
+                                runOnUiThread {
+                                    errorText.text = "Category added successfully."
+                                    errorText.setTextColor(getColor(R.color.green))
+                                    errorText.visibility = TextView.VISIBLE
 
-                        runOnUiThread {
-                            errorText.text = "Category added successfully."
-                            errorText.setTextColor(getColor(R.color.green))
-                            errorText.visibility = TextView.VISIBLE
+                                    categoryNameInput.text.clear()
+                                    budgetGoalInput.text.clear()
+                                    imageFileName.text = ""
+                                    selectedImageUri = null
+                                }
+                            }
 
-                            categoryNameInput.text.clear()
-                            budgetGoalInput.text.clear()
-                            imageFileName.text = ""
-                            selectedImageUri = null
-                        }
+
                     }
                 }
-            }
         }
 
         // Footer items

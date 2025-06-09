@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("kotlin-kapt")
+
     alias(libs.plugins.google.gms.google.services)
 }
 
@@ -36,7 +36,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
-        viewBinding; true
+        viewBinding = true
     }
 }
 
@@ -52,19 +52,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
     implementation (libs.williamchart)
 
-    val roomVersion = "2.6.1"
+    implementation(libs.firebase.database.ktx)
 
-    //noinspection UseTomlInstead,GradleDependency
-    implementation("androidx.room:room-runtime:$roomVersion")
-    //noinspection UseTomlInstead,GradleDependency
-    annotationProcessor("androidx.room:room-compiler:$roomVersion")
-    // To use Kotlin Symbol Processing (KSP)
-    //noinspection UseTomlInstead,KaptUsageInsteadOfKsp,GradleDependency
-    kapt("androidx.room:room-compiler:$roomVersion")
-    // optional - Kotlin Extensions and Coroutines support for Room
-    //noinspection UseTomlInstead,GradleDependency
-    implementation("androidx.room:room-ktx:$roomVersion")
 }
