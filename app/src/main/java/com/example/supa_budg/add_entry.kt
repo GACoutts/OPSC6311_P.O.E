@@ -21,9 +21,9 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 
 import com.example.supa_budg.data.Entry
-import com.example.supa_budg.data.EntryDao
+
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
+
 import java.util.Date
 
 class AddEntry : AppCompatActivity() {
