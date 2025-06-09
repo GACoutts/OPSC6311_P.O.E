@@ -51,7 +51,7 @@ class SetMonthlyBudget : AppCompatActivity() {
     }
 
     private fun loadCategories() {
-        val catRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("categories")
+        val catRef = FirebaseDatabase.getInstance().getReference("User").child(uid).child("Category")
 
         catRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -103,7 +103,7 @@ class SetMonthlyBudget : AppCompatActivity() {
             }
 
             val categoryRef = FirebaseDatabase.getInstance()
-                .getReference("users").child(uid).child("categories").child(category.categoryid)
+                .getReference("users").child(uid).child("Category").child(category.categoryid)
 
             categoryRef.child("goal").setValue(amount.toInt())
                 .addOnSuccessListener {

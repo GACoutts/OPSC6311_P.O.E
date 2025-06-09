@@ -23,7 +23,7 @@ class Signup : AppCompatActivity() {
         signupButton = findViewById(R.id.loginButton)
         loginRedirect = findViewById(R.id.loginText)
 
-        val dbRef = FirebaseDatabase.getInstance().getReference("users_auth")
+        val dbRef = FirebaseDatabase.getInstance().getReference("User")
 
         signupButton.setOnClickListener {
             val email = emailInput.text.toString().trim().lowercase()

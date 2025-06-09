@@ -46,7 +46,7 @@ class AddEntry : AppCompatActivity() {
         dateText = findViewById(R.id.dateText)
         attachPhotoText = findViewById(R.id.attachPhoto)
 
-        dbRef = FirebaseDatabase.getInstance().getReference("user").child(uid)
+        dbRef = FirebaseDatabase.getInstance().getReference("User").child(uid)
 
         val calendar = Calendar.getInstance()
         updateDateText(calendar)
@@ -128,7 +128,7 @@ class AddEntry : AppCompatActivity() {
                         isExpense = isExpense
                     )
 
-                    dbRef.child("entries").child(entryId).setValue(newEntry).addOnSuccessListener {
+                    dbRef.child("Entry").child(entryId).setValue(newEntry).addOnSuccessListener {
                         Toast.makeText(this@AddEntry, "Entry saved!", Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this@AddEntry, Dashboard::class.java))
                         finish()
@@ -143,7 +143,7 @@ class AddEntry : AppCompatActivity() {
         categoryTextView.setOnClickListener {
             lifecycleScope.launch {
                 try {
-                    val snapshot = dbRef.child("categories").get().await()
+                    val snapshot = dbRef.child("Category").get().await()
                     val categories = snapshot.children.mapNotNull {
                         it.child("name").getValue(String::class.java)
                     }.toMutableList()

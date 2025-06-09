@@ -51,7 +51,7 @@ class Dashboard : AppCompatActivity() {
             startActivity(Intent(this, AddEntry::class.java))
         }
 
-        dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("entries")
+        dbRef = FirebaseDatabase.getInstance().getReference("User").child(uid).child("Entry")
 
         loadDashboardData()
         setupFooter()

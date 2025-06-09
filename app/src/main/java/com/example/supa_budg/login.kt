@@ -28,7 +28,7 @@ class Login : AppCompatActivity() {
         errorText = findViewById(R.id.errorText)
         registerText = findViewById(R.id.registerText)
 
-        dbRef = FirebaseDatabase.getInstance().getReference("users_auth")
+        dbRef = FirebaseDatabase.getInstance().getReference("User")
 
         usernameField.setOnFocusChangeListener { _, _ -> errorText.visibility = View.GONE }
         passwordField.setOnFocusChangeListener { _, _ -> errorText.visibility = View.GONE }

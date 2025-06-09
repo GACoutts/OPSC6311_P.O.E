@@ -41,7 +41,7 @@ class EntryCalender : AppCompatActivity() {
         totalText = findViewById(R.id.totalValue)
         showingDateText = findViewById(R.id.showingResultsDate)
 
-        dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("entries")
+        dbRef = FirebaseDatabase.getInstance().getReference("User").child(uid).child("Entry")
 
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
@@ -99,7 +99,7 @@ class EntryCalender : AppCompatActivity() {
         val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
 
         // Load categories from Firebase
-        val catRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("categories")
+        val catRef = FirebaseDatabase.getInstance().getReference("User").child(uid).child("Category")
         catRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val categoryNames = mutableListOf<String>()

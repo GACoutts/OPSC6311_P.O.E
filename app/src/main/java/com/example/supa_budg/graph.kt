@@ -54,7 +54,7 @@
             val dialogView = layoutInflater.inflate(R.layout.dialog_graph_settings, null)
             val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
 
-            val catRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("categories")
+            val catRef = FirebaseDatabase.getInstance().getReference("User").child(uid).child("Category")
             catRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val categories = mutableListOf<String>()
@@ -109,8 +109,8 @@
         }
 
         private fun loadBarChartDataWithGoals() {
-            val categoryRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("categories")
-            val entryRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("entries")
+            val categoryRef = FirebaseDatabase.getInstance().getReference("User").child(uid).child("Category")
+            val entryRef = FirebaseDatabase.getInstance().getReference("User").child(uid).child("Entry")
 
             CoroutineScope(Dispatchers.Main).launch {
                 val categories = withContext(Dispatchers.IO) {
