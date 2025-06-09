@@ -54,9 +54,21 @@
             android:name=".Graph"
             android:exported="false" />
 
-         <activity
+        <activity
+            android:name=".AchievementDetailActivity"
+            android:exported="false"/>
+
+        <activity
+            android:name=".LockedAchievementDetailActivity"
+            android:exported="false"/>
+
+        <activity
+            android:name=".IncompleteAchievementActivity"
+            android:exported="false"/>
+
+        <activity
             android:name=".Achievements"
-             android:exported="false"/>
+            android:exported="false"/>
 
         <activity
             android:name=".MonthlyBudget"

@@ -56,5 +56,6 @@ dependencies {
     implementation (libs.williamchart)
 
     implementation(libs.firebase.database.ktx)
+    implementation(libs.konfetti.xml)
 
 }

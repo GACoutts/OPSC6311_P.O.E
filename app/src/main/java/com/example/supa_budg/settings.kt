@@ -13,6 +13,11 @@ class Settings : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.settings)
 
+        val achievementsSection = findViewById<LinearLayout>(R.id.achievementsSection)
+        achievementsSection.setOnClickListener {
+            val intent = Intent(this, Achievements::class.java)
+            startActivity(intent)
+        }
         val exitSection = findViewById<LinearLayout>(R.id.exitSection)
         exitSection.setOnClickListener {
             Toast.makeText(this, "Signed out successfully", Toast.LENGTH_SHORT).show()

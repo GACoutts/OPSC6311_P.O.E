@@ -9,4 +9,9 @@
     <color name="blue">#1b98e0</color>
 
     <color name="darkBlue">#333e6a</color>
+
+    // Achievements
+    <color name="green_achievement">#4CAF50</color>
+    <color name="red_achievement">#F44336</color>
+    <color name="teal_700">#009688</color>
 </resources>
