@@ -8,12 +8,12 @@ import java.time.format.DateTimeFormatter
 
 data class Entry(
     var entryId: String ? = null,
-    var amount: Int,
+    var amount: Int = 0,
     var date: LocalDateTime = LocalDateTime.now(),
-    var categoryid: Int,
-    var notes: String,
+    var categoryid: String ? = null,
+    var notes: String ? = null,
     var photoUri: String? = null,
-    var isExpense: Boolean
+    var isExpense: Boolean = false
 ) : Parcelable {
 
     val createdDateFormat: String
@@ -23,7 +23,7 @@ data class Entry(
         entryId = parcel.readString(),
         amount = parcel.readInt(),
         date = LocalDateTime.parse(parcel.readString()),
-        categoryid = parcel.readInt(),
+        categoryid = parcel.readString(),
         notes = parcel.readString() ?: "",
         photoUri = parcel.readString(),
         isExpense = parcel.readByte() != 0.toByte()
@@ -33,7 +33,7 @@ data class Entry(
         parcel.writeString(entryId)
         parcel.writeInt(amount)
         parcel.writeString(date.toString())
-        parcel.writeInt(categoryid)
+        parcel.writeString(categoryid)
         parcel.writeString(notes)
         parcel.writeString(photoUri)
         parcel.writeByte(if (isExpense) 1 else 0)

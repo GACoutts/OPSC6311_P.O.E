@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.util.*
 
 class AddEntry : AppCompatActivity() {
@@ -114,7 +115,8 @@ class AddEntry : AppCompatActivity() {
                     val categoryId = categorySnapshot.children.first().key ?: ""
 
                     val entryId = dbRef.child("Entry").push().key ?: return@launch
-                    val entryDate = selectedDate.toInstant().toString()
+                    val entryDate = LocalDateTime.now()
+                        //selectedDate.toInstant().toString()
 
                     val newEntry = Entry(
                         entryId = entryId,
