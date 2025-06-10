@@ -13,9 +13,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.supa_budg.data.Entry
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
-import kotlinx.coroutines.Dispatchers
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
@@ -26,17 +24,21 @@ class AddEntry : AppCompatActivity() {
 
     private lateinit var dateText: TextView
     private lateinit var attachPhotoText: TextView
-    private lateinit var dbRef: DatabaseReference
-
-    private val uid get() = getSharedPreferences("APP_PREFS", MODE_PRIVATE)
-    .getString("uid", null)
     private val pickImageRequest = 1
+    private lateinit var dbRef: FirebaseDatabase
+    private var userUid: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.add_income_expense)
 
-        Log.d("AddEntry", "Retrieved UID: $uid")
+        // Get UID from SharedPreferences
+        userUid = getSharedPreferences("APP_PREFS", MODE_PRIVATE).getString("uid", null)
+        if (userUid == null) {
+            Toast.makeText(this, "User ID not found. Please log in again.", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
 
         val toggleButton = findViewById<ToggleButton>(R.id.toggleButton)
         val amountPrefix = findViewById<TextView>(R.id.currencyPrefix)
@@ -50,19 +52,12 @@ class AddEntry : AppCompatActivity() {
         dateText = findViewById(R.id.dateText)
         attachPhotoText = findViewById(R.id.attachPhoto)
 
-        dbRef = FirebaseDatabase.getInstance().getReference("User").child(uid.toString())
-
         val calendar = Calendar.getInstance()
         updateDateText(calendar)
 
         toggleButton.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                toggleButton.text = getString(R.string.hint_income)
-                amountPrefix.text = "R"
-            } else {
-                toggleButton.text = getString(R.string.hint_expense)
-                amountPrefix.text = "- R"
-            }
+            toggleButton.text = if (isChecked) getString(R.string.hint_income) else getString(R.string.hint_expense)
+            amountPrefix.text = if (isChecked) "R" else "- R"
         }
 
         calendarRow.setOnClickListener {
@@ -105,7 +100,10 @@ class AddEntry : AppCompatActivity() {
             // Save to Firebase
             lifecycleScope.launch {
                 try {
-                    val categorySnapshot = dbRef.child("Category")
+                    val uid = userUid!!
+                    val userRef = FirebaseDatabase.getInstance().getReference(uid)
+
+                    val categorySnapshot = userRef.child("Category")
                         .orderByChild("name")
                         .equalTo(selectedCategoryName)
                         .get()
@@ -116,27 +114,25 @@ class AddEntry : AppCompatActivity() {
                         return@launch
                     }
 
-                    val categoryId = categorySnapshot.children.first().key ?: ""
-
-                    val entryId = dbRef.child("Entry").push().key ?: return@launch
-                    val entryDate = LocalDateTime.now()
-                        //selectedDate.toInstant().toString()
+                    val categoryId = categorySnapshot.children.first().key ?: return@launch
+                    val entryId = userRef.child("Entry").push().key ?: return@launch
 
                     val newEntry = Entry(
                         entryId = entryId,
                         amount = amount,
-                        date = entryDate,
+                        date = LocalDateTime.now(),
                         categoryid = categoryId,
                         notes = notes,
                         photoUri = photoUri,
                         isExpense = isExpense
                     )
 
-                    dbRef.child("Entry").child(entryId).setValue(newEntry).addOnSuccessListener {
-                        Toast.makeText(this@AddEntry, "Entry saved!", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this@AddEntry, Dashboard::class.java))
-                        finish()
-                    }
+                    userRef.child("Entry").child(entryId).setValue(newEntry)
+                        .addOnSuccessListener {
+                            Toast.makeText(this@AddEntry, "Entry saved!", Toast.LENGTH_SHORT).show()
+                            startActivity(Intent(this@AddEntry, Dashboard::class.java))
+                            finish()
+                        }
 
                 } catch (e: Exception) {
                     showError(errorText, "Error: ${e.message}")
@@ -147,7 +143,7 @@ class AddEntry : AppCompatActivity() {
         categoryTextView.setOnClickListener {
             lifecycleScope.launch {
                 try {
-                    val snapshot = dbRef.child("Category").get().await()
+                    val snapshot = FirebaseDatabase.getInstance().getReference(userUid!!).child("Category").get().await()
                     val categories = snapshot.children.mapNotNull {
                         it.child("name").getValue(String::class.java)
                     }.toMutableList()
@@ -195,7 +191,7 @@ class AddEntry : AppCompatActivity() {
         dateText.text = format.format(calendar.time)
     }
 
-    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
+    @Deprecated("Use Activity Result API")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == pickImageRequest && resultCode == RESULT_OK && data?.data != null) {
