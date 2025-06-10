@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -27,12 +28,15 @@ class AddEntry : AppCompatActivity() {
     private lateinit var attachPhotoText: TextView
     private lateinit var dbRef: DatabaseReference
 
-    private val uid get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    private val uid get() = getSharedPreferences("APP_PREFS", MODE_PRIVATE)
+    .getString("uid", null)
     private val pickImageRequest = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.add_income_expense)
+
+        Log.d("AddEntry", "Retrieved UID: $uid")
 
         val toggleButton = findViewById<ToggleButton>(R.id.toggleButton)
         val amountPrefix = findViewById<TextView>(R.id.currencyPrefix)
@@ -46,7 +50,7 @@ class AddEntry : AppCompatActivity() {
         dateText = findViewById(R.id.dateText)
         attachPhotoText = findViewById(R.id.attachPhoto)
 
-        dbRef = FirebaseDatabase.getInstance().getReference("User").child(uid)
+        dbRef = FirebaseDatabase.getInstance().getReference("User").child(uid.toString())
 
         val calendar = Calendar.getInstance()
         updateDateText(calendar)

@@ -24,7 +24,8 @@ class AddCategory : AppCompatActivity() {
     private var selectedImageUri: Uri? = null
 
     private lateinit var dbRef: DatabaseReference
-    private val uid get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    private val uid get() = getSharedPreferences("APP_PREFS", MODE_PRIVATE)
+        .getString("uid", null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,24 +44,11 @@ class AddCategory : AppCompatActivity() {
         imagePicker = findViewById(R.id.imagePicker)
         imagePickerContainer = findViewById(R.id.imagePickerContainer)
 
-        val uid = getSharedPreferences("APP_PREFS", MODE_PRIVATE).getString("uid", "") ?: ""
-        val userRootRef = FirebaseDatabase.getInstance().getReference("User")
+        // Initialize database reference directly to the user's categories
 
-        userRootRef.orderByChild("uid").equalTo(uid)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        val userKey = snapshot.children.first().key ?: return
-                        dbRef = userRootRef.child(userKey).child("category")
-                    } else {
-                        Toast.makeText(this@AddCategory, "User not found in DB", Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@AddCategory, "DB error: ${error.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
+            dbRef = FirebaseDatabase.getInstance().getReference("User")
+                .child(uid.toString())
+                .child("Category")
 
 
         imagePickerContainer.setOnClickListener {
@@ -81,43 +69,6 @@ class AddCategory : AppCompatActivity() {
                 else -> checkIfCategoryExists(categoryName, imageUrl, budgetGoal)
             }
         }
-        /*
-
-        // Footer buttons setup
-        val homeButton = findViewById<ImageButton>(R.id.footerHome)
-        val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
-        val addEntryButton = findViewById<ImageButton>(R.id.footerAddCategory)
-        val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
-
-        homeButton.setOnClickListener {
-            val intent = Intent(this, Dashboard::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        addEntryButton.setOnClickListener {
-            val intent = Intent(this, AddCategory::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        calendarButton.setOnClickListener {
-            val intent = Intent(this, EntryCalender::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        budgetButton.setOnClickListener {
-            val intent = Intent(this, SetMonthyBudget::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-         */
-
     }
 
     private fun checkIfCategoryExists(name: String, imageUrl: String, goal: Int) {
@@ -165,8 +116,7 @@ class AddCategory : AppCompatActivity() {
         errorText.visibility = TextView.VISIBLE
     }
 
-    // Handling the result of the image picker activity
-    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
+    @Deprecated("Deprecated in favor of Activity Result API")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == IMAGE_PICK_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
@@ -175,15 +125,6 @@ class AddCategory : AppCompatActivity() {
             imageFileName.text = imagePath
         } else {
             Toast.makeText(this, "Image selection failed", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    // Helper function to show error messages
-    private fun showError(textView: TextView, message: String) {
-        runOnUiThread {
-            textView.text = message
-            textView.setTextColor(getColor(R.color.red))
-            textView.visibility = TextView.VISIBLE
         }
     }
 }
