@@ -12,9 +12,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.supa_budg.data.Entry
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
-import kotlinx.coroutines.Dispatchers
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
@@ -25,10 +23,9 @@ class AddEntry : AppCompatActivity() {
 
     private lateinit var dateText: TextView
     private lateinit var attachPhotoText: TextView
-    private lateinit var dbRef: DatabaseReference
-
-    private val uid get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     private val pickImageRequest = 1
+
+    private lateinit var userKey: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,19 +43,30 @@ class AddEntry : AppCompatActivity() {
         dateText = findViewById(R.id.dateText)
         attachPhotoText = findViewById(R.id.attachPhoto)
 
-        dbRef = FirebaseDatabase.getInstance().getReference("User").child(uid)
-
         val calendar = Calendar.getInstance()
         updateDateText(calendar)
 
-        toggleButton.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                toggleButton.text = getString(R.string.hint_income)
-                amountPrefix.text = "R"
+        // Find actual userKey using saved UID
+        val uid = getSharedPreferences("APP_PREFS", MODE_PRIVATE).getString("uid", "") ?: ""
+
+        lifecycleScope.launch {
+            val userSnapshot = FirebaseDatabase.getInstance().getReference("User")
+                .orderByChild("uid")
+                .equalTo(uid)
+                .get()
+                .await()
+
+            if (userSnapshot.exists()) {
+                userKey = userSnapshot.children.first().key!!
             } else {
-                toggleButton.text = getString(R.string.hint_expense)
-                amountPrefix.text = "- R"
+                Toast.makeText(this@AddEntry, "User not found in DB", Toast.LENGTH_SHORT).show()
+                finish()
             }
+        }
+
+        toggleButton.setOnCheckedChangeListener { _, isChecked ->
+            toggleButton.text = if (isChecked) getString(R.string.hint_income) else getString(R.string.hint_expense)
+            amountPrefix.text = if (isChecked) "R" else "- R"
         }
 
         calendarRow.setOnClickListener {
@@ -88,7 +96,6 @@ class AddEntry : AppCompatActivity() {
             val selectedCategoryName = categoryTextView.text.toString()
             val isExpense = !toggleButton.isChecked
 
-            // Validation
             when {
                 amount <= 0 -> return@setOnClickListener showError(errorText, "Please enter a valid amount.")
                 selectedDate == null -> return@setOnClickListener showError(errorText, "Invalid date.")
@@ -98,11 +105,12 @@ class AddEntry : AppCompatActivity() {
 
             errorText.visibility = TextView.GONE
 
-            // Save to Firebase
             lifecycleScope.launch {
                 try {
-                    val categorySnapshot = dbRef.child("Category")
-                        .orderByChild("name")
+                    val categoryRef = FirebaseDatabase.getInstance()
+                        .getReference("User").child(userKey).child("Category")
+
+                    val categorySnapshot = categoryRef.orderByChild("name")
                         .equalTo(selectedCategoryName)
                         .get()
                         .await()
@@ -112,23 +120,23 @@ class AddEntry : AppCompatActivity() {
                         return@launch
                     }
 
-                    val categoryId = categorySnapshot.children.first().key ?: ""
+                    val categoryId = categorySnapshot.children.first().key ?: return@launch
 
-                    val entryId = dbRef.child("Entry").push().key ?: return@launch
-                    val entryDate = LocalDateTime.now()
-                        //selectedDate.toInstant().toString()
+                    val entryRef = FirebaseDatabase.getInstance()
+                        .getReference("User").child(userKey).child("Entry")
+                    val entryId = entryRef.push().key ?: return@launch
 
                     val newEntry = Entry(
                         entryId = entryId,
                         amount = amount,
-                        date = entryDate,
+                        date = LocalDateTime.now(),
                         categoryid = categoryId,
                         notes = notes,
                         photoUri = photoUri,
                         isExpense = isExpense
                     )
 
-                    dbRef.child("Entry").child(entryId).setValue(newEntry).addOnSuccessListener {
+                    entryRef.child(entryId).setValue(newEntry).addOnSuccessListener {
                         Toast.makeText(this@AddEntry, "Entry saved!", Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this@AddEntry, Dashboard::class.java))
                         finish()
@@ -143,34 +151,29 @@ class AddEntry : AppCompatActivity() {
         categoryTextView.setOnClickListener {
             lifecycleScope.launch {
                 try {
-                    val userRootRef = FirebaseDatabase.getInstance().getReference("User")
-                    val snapshot = userRootRef.orderByChild("uid").equalTo(uid).get().await()
+                    val catSnapshot = FirebaseDatabase.getInstance()
+                        .getReference("User").child(userKey).child("Category")
+                        .get().await()
 
-                    if (snapshot.exists()) {
-                        val userKey = snapshot.children.first().key ?: return@launch
-                        val catSnapshot = userRootRef.child(userKey).child("Category").get().await()
+                    val categories = catSnapshot.children.mapNotNull {
+                        it.child("name").getValue(String::class.java)
+                    }.toMutableList()
 
-                        val categories = catSnapshot.children.mapNotNull {
-                            it.child("name").getValue(String::class.java)
-                        }.toMutableList()
+                    categories.add("Add Category")
 
-                        categories.add("Add Category")
-
-                        runOnUiThread {
-                            val builder = AlertDialog.Builder(this@AddEntry)
-                            builder.setTitle("Select Category")
-                            builder.setItems(categories.toTypedArray()) { _, which ->
-                                if (which == categories.lastIndex) {
-                                    startActivity(Intent(this@AddEntry, AddCategory::class.java))
-                                } else {
-                                    categoryTextView.text = categories[which]
-                                    errorText.visibility = TextView.GONE
-                                }
+                    runOnUiThread {
+                        val builder = AlertDialog.Builder(this@AddEntry)
+                        builder.setTitle("Select Category")
+                        builder.setItems(categories.toTypedArray()) { _, which ->
+                            if (which == categories.lastIndex) {
+                                startActivity(Intent(this@AddEntry, AddCategory::class.java))
+                            } else {
+                                categoryTextView.text = categories[which]
+                                errorText.visibility = TextView.GONE
                             }
-                            builder.show()
                         }
+                        builder.show()
                     }
-
 
                 } catch (e: Exception) {
                     showError(errorText, "Failed to load categories.")
@@ -199,7 +202,7 @@ class AddEntry : AppCompatActivity() {
         dateText.text = format.format(calendar.time)
     }
 
-    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
+    @Deprecated("Use Activity Result API")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == pickImageRequest && resultCode == RESULT_OK && data?.data != null) {

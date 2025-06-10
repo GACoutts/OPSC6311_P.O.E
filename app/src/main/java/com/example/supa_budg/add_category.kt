@@ -7,8 +7,9 @@ import android.provider.MediaStore
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.supa_budg.data.Category
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.tasks.await
 
 class AddCategory : AppCompatActivity() {
 
@@ -24,7 +25,7 @@ class AddCategory : AppCompatActivity() {
     private var selectedImageUri: Uri? = null
 
     private lateinit var dbRef: DatabaseReference
-    private val uid get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    private lateinit var userKey: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,9 +44,27 @@ class AddCategory : AppCompatActivity() {
         imagePicker = findViewById(R.id.imagePicker)
         imagePickerContainer = findViewById(R.id.imagePickerContainer)
 
-        val uid = getSharedPreferences("APP_PREFS", MODE_PRIVATE).getString("uid", "") ?: ""
-        dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("categories")
+        val savedUid = getSharedPreferences("APP_PREFS", MODE_PRIVATE).getString("uid", "") ?: ""
 
+        // 🔍 Resolve the user's key using the stored uid
+        FirebaseDatabase.getInstance().getReference("User")
+            .orderByChild("uid")
+            .equalTo(savedUid)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        userKey = snapshot.children.first().key!!
+                        dbRef = FirebaseDatabase.getInstance().getReference("User").child(userKey).child("Category")
+                    } else {
+                        Toast.makeText(this@AddCategory, "User not found in database.", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(this@AddCategory, "Database error: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
 
         imagePickerContainer.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -53,6 +72,11 @@ class AddCategory : AppCompatActivity() {
         }
 
         saveCategoryButton.setOnClickListener {
+            if (!::dbRef.isInitialized) {
+                showError("Database not ready. Please try again in a second.")
+                return@setOnClickListener
+            }
+
             val categoryName = categoryNameInput.text.toString().trim()
             val imageUrl = selectedImageUri?.toString() ?: ""
             val budgetGoal = budgetGoalInput.text.toString().toIntOrNull()
@@ -65,7 +89,6 @@ class AddCategory : AppCompatActivity() {
                 else -> checkIfCategoryExists(categoryName, imageUrl, budgetGoal)
             }
         }
-
     }
 
     private fun checkIfCategoryExists(name: String, imageUrl: String, goal: Int) {
@@ -113,8 +136,7 @@ class AddCategory : AppCompatActivity() {
         errorText.visibility = TextView.VISIBLE
     }
 
-    // Handling the result of the image picker activity
-    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
+    @Deprecated("Use Activity Result API")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == IMAGE_PICK_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
@@ -126,7 +148,6 @@ class AddCategory : AppCompatActivity() {
         }
     }
 
-    // Helper function to show error messages
     private fun showError(textView: TextView, message: String) {
         runOnUiThread {
             textView.text = message
