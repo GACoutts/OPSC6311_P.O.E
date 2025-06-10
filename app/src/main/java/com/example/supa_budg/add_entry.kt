@@ -115,7 +115,7 @@ class AddEntry : AppCompatActivity() {
                     val categoryId = categorySnapshot.children.first().key ?: ""
 
                     val entryId = dbRef.child("Entry").push().key ?: return@launch
-                    val entryDate = LocalDateTime.now()
+                    val entryDate = LocalDateTime.now().toString()
                         //selectedDate.toInstant().toString()
 
                     val newEntry = Entry(
