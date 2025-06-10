@@ -22,6 +22,7 @@
     import kotlinx.coroutines.*
     import kotlinx.coroutines.tasks.await
     import java.time.*
+    import java.time.format.DateTimeFormatter
     import java.util.*
 
     class Graph : AppCompatActivity() {
@@ -144,7 +145,14 @@
                 ?: YearMonth.now().plusMonths(2).atEndOfMonth().atTime(23, 59, 59)
 
             val filteredEntries = entries.filter {
-                val date = Instant.parse(it.date.toString()).atZone(ZoneId.systemDefault()).toLocalDateTime()
+                val dateStr = it.date.toString()
+                val date = if (dateStr.endsWith("Z")) {
+                    Instant.parse(dateStr).atZone(ZoneId.systemDefault()).toLocalDateTime()
+                } else {
+                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+                    LocalDateTime.parse(dateStr, formatter)
+                }
+
                 date.isAfter(start.minusSeconds(1)) && date.isBefore(end.plusSeconds(1)) &&
                         (selectedCategoryId == null || it.categoryid == selectedCategoryId)
             }
@@ -152,7 +160,14 @@
             val monthlyData = mutableMapOf<YearMonth, Pair<Float, Float>>()
 
             for (entry in filteredEntries) {
-                val ym = YearMonth.from(Instant.parse(entry.date.toString()).atZone(ZoneId.systemDefault()).toLocalDateTime())
+                val dateStr = entry.date.toString()
+                val date = if (dateStr.endsWith("Z")) {
+                    Instant.parse(dateStr).atZone(ZoneId.systemDefault()).toLocalDateTime()
+                } else {
+                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+                    LocalDateTime.parse(dateStr, formatter)
+                }
+                val ym = YearMonth.from(date)
                 val current = monthlyData.getOrDefault(ym, 0f to 0f)
                 monthlyData[ym] = if (entry.isExpense) current.first to current.second + entry.amount
                 else current.first + entry.amount to current.second
