@@ -139,52 +139,76 @@
                 categories.find { it.name == catName }?.categoryid
             }
 
-            val start = selectedStartDate?.toLocalDateOrNull()?.atStartOfDay()
-                ?: YearMonth.now().minusMonths(2).atDay(1).atStartOfDay()
-            val end = selectedEndDate?.toLocalDateOrNull()?.atTime(23, 59, 59)
-                ?: YearMonth.now().plusMonths(2).atEndOfMonth().atTime(23, 59, 59)
+            // Define date range: past 2 months to next 2 months from now
+            val startMonth = YearMonth.now().minusMonths(2)
+            val endMonth = YearMonth.now().plusMonths(2)
 
-            val filteredEntries = entries.filter {
-                val dateStr = it.date.toString()
-                val date = if (dateStr.endsWith("Z")) {
-                    Instant.parse(dateStr).atZone(ZoneId.systemDefault()).toLocalDateTime()
-                } else {
-                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
-                    LocalDateTime.parse(dateStr, formatter)
-                }
-
-                date.isAfter(start.minusSeconds(1)) && date.isBefore(end.plusSeconds(1)) &&
-                        (selectedCategoryId == null || it.categoryid == selectedCategoryId)
+            println("=== All entries ===")
+            entries.forEach {
+                println("Entry: categoryid=${it.categoryid}, amount=${it.amount}, isExpense=${it.isExpense}, date=${it.createdDateFormat}")
             }
 
-            val monthlyData = mutableMapOf<YearMonth, Pair<Float, Float>>()
-
-            for (entry in filteredEntries) {
-                val dateStr = entry.date.toString()
-                val date = if (dateStr.endsWith("Z")) {
-                    Instant.parse(dateStr).atZone(ZoneId.systemDefault()).toLocalDateTime()
-                } else {
-                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
-                    LocalDateTime.parse(dateStr, formatter)
+            // Filter and parse entries
+            val filteredEntries = entries.mapNotNull { entry ->
+                val dateStr = entry.createdDateFormat ?: return@mapNotNull null
+                val date = try {
+                    LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy/MM/dd")).atStartOfDay()
+                } catch (e: Exception) {
+                    null
                 }
+                if (date != null &&
+                    !YearMonth.from(date).isBefore(startMonth) &&
+                    !YearMonth.from(date).isAfter(endMonth) &&
+                    (selectedCategoryId == null || entry.categoryid == selectedCategoryId)
+                ) {
+                    entry to date
+                } else {
+                    null
+                }
+            }
+
+            println("=== Filtered entries within date range and category ===")
+            filteredEntries.forEach { (entry, date) ->
+                println("Entry: categoryid=${entry.categoryid}, amount=${entry.amount}, isExpense=${entry.isExpense}, date=$date")
+            }
+
+            // Aggregate income and expense by YearMonth
+            val monthlyData = mutableMapOf<YearMonth, Pair<Float, Float>>()  // Pair<Income, Expense>
+            for ((entry, date) in filteredEntries) {
                 val ym = YearMonth.from(date)
                 val current = monthlyData.getOrDefault(ym, 0f to 0f)
-                monthlyData[ym] = if (entry.isExpense) current.first to current.second + entry.amount
-                else current.first + entry.amount to current.second
+                if (entry.isExpense) {
+                    monthlyData[ym] = current.first to current.second + entry.amount
+                } else {
+                    monthlyData[ym] = current.first + entry.amount to current.second
+                }
             }
 
+            // Generate full list of months from start to end
+            val monthsInRange = mutableListOf<YearMonth>()
+            var currentMonth = startMonth
+            while (!currentMonth.isAfter(endMonth)) {
+                monthsInRange.add(currentMonth)
+                currentMonth = currentMonth.plusMonths(1)
+            }
+
+            // Prepare data for chart: for each month use monthlyData or zeroes
             val barEntries = mutableListOf<BarEntry>()
             val xLabels = mutableListOf<String>()
             var index = 0f
-
-            val sortedMonths = monthlyData.keys.sorted()
-
-            for (monthKey in sortedMonths) {
-                val data = monthlyData[monthKey]!!
+            for (monthKey in monthsInRange) {
+                val data = monthlyData[monthKey] ?: (0f to 0f)
                 barEntries.add(BarEntry(index, floatArrayOf(data.first, data.second)))
-                xLabels.add(monthKey.month.name.substring(0, 3))
+                xLabels.add(monthKey.month.name.substring(0, 3))  // Jan, Feb, etc.
                 index += 1f
             }
+
+            // If no data at all, clear chart and show message
+//            if (barEntries.all { it.ySum == 0f }) {
+//                barChart.clear()
+//                resultsTextView.text = "No data available for the selected period."
+//                return
+//            }
 
             val barDataSet = BarDataSet(barEntries, "Income vs Expense").apply {
                 colors = listOf(
@@ -207,7 +231,7 @@
                 xAxis.granularity = 1f
                 axisLeft.removeAllLimitLines()
 
-                // Optional goal line
+                // Optional goal lines (using all categories goals)
                 val goalRange = categories.map { it.goal }
                 if (goalRange.isNotEmpty()) {
                     goalRange.minOrNull()?.let { addGoalLine(it.toFloat(), "Min Goal", Color.RED) }
@@ -220,9 +244,12 @@
                 invalidate()
             }
 
-            resultsTextView.text = "Showing data from ${start.toLocalDate()} to ${end.toLocalDate()}" +
+            resultsTextView.text = "Showing data from ${startMonth.atDay(1)} to ${endMonth.atEndOfMonth()}" +
                     (selectedCategory?.let { " for category: $it" } ?: "")
         }
+
+
+
 
         private fun BarChart.addGoalLine(value: Float, label: String, color: Int) {
             val goalLine = LimitLine(value, label).apply {

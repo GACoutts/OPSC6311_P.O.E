@@ -128,7 +128,14 @@ class AddEntry : AppCompatActivity() {
                     val entryId = dbRef.child("Entry").push().key ?: return@launch
 
                     // Format the date properly, you might want to use selectedDate here
-                    val entryDate = LocalDateTime.now().toString()
+                    val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+
+                    val entryDate = selectedDate.toInstant()
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toLocalDateTime()
+                        .format(formatter)
+
+
 
                     val newEntry = Entry(
                         entryId = entryId,
@@ -139,6 +146,8 @@ class AddEntry : AppCompatActivity() {
                         photoUri = photoUri,
                         isExpense = isExpense
                     )
+
+                    Log.d("AddEntry", "Saving entry with date = $entryDate")
 
                     dbRef.child("Entry").child(entryId).setValue(newEntry).addOnSuccessListener {
                         Toast.makeText(this@AddEntry, "Entry saved!", Toast.LENGTH_SHORT).show()

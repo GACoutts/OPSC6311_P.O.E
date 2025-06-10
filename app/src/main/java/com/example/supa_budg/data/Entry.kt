@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter
 data class Entry(
     var entryId: String? = null,
     var amount: Int = 0,
-    var date: String = LocalDateTime.now().toString(),  // Store date as ISO string for Firebase
+    var date: String? = null,  // Store date as ISO string for Firebase
     var categoryid: String? = null,
     var notes: String? = null,
     var photoUri: String? = null,
