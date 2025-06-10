@@ -46,22 +46,38 @@ class MonthlyBudget : AppCompatActivity() {
     }
 
     private fun loadCategories() {
-        val catRef = FirebaseDatabase.getInstance().getReference("User").child(uid).child("Category")
-        catRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                categoryList = snapshot.children.mapNotNull {
-                    val id = it.key ?: return@mapNotNull null
-                    val name = it.child("name").getValue(String::class.java) ?: return@mapNotNull null
-                    val goal = it.child("goal").getValue(Int::class.java) ?: 0
-                    Category(id, name, "", goal)
-                }
-            }
+        val userRef = FirebaseDatabase.getInstance().getReference("User")
 
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@MonthlyBudget, "Error loading categories.", Toast.LENGTH_SHORT).show()
-                categoryList = emptyList()
-            }
-        })
+        userRef.orderByChild("uid").equalTo(uid)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        val userKey = snapshot.children.first().key ?: return
+                        val catRef = userRef.child(userKey).child("Category")
+
+                        catRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                categoryList = snapshot.children.mapNotNull {
+                                    val id = it.key ?: return@mapNotNull null
+                                    val name = it.child("name").getValue(String::class.java) ?: return@mapNotNull null
+                                    val goal = it.child("goal").getValue(Int::class.java) ?: 0
+                                    Category(id, name, "", goal)
+                                }
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                Toast.makeText(this@MonthlyBudget, "Error loading categories.", Toast.LENGTH_SHORT).show()
+                                categoryList = emptyList()
+                            }
+                        })
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(this@MonthlyBudget, "Error finding user: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+
     }
 
     private fun showBudgetSettingsModal() {

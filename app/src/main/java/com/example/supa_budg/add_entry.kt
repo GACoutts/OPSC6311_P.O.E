@@ -143,26 +143,34 @@ class AddEntry : AppCompatActivity() {
         categoryTextView.setOnClickListener {
             lifecycleScope.launch {
                 try {
-                    val snapshot = dbRef.child("Category").get().await()
-                    val categories = snapshot.children.mapNotNull {
-                        it.child("name").getValue(String::class.java)
-                    }.toMutableList()
+                    val userRootRef = FirebaseDatabase.getInstance().getReference("User")
+                    val snapshot = userRootRef.orderByChild("uid").equalTo(uid).get().await()
 
-                    categories.add("Add Category")
+                    if (snapshot.exists()) {
+                        val userKey = snapshot.children.first().key ?: return@launch
+                        val catSnapshot = userRootRef.child(userKey).child("Category").get().await()
 
-                    runOnUiThread {
-                        val builder = AlertDialog.Builder(this@AddEntry)
-                        builder.setTitle("Select Category")
-                        builder.setItems(categories.toTypedArray()) { _, which ->
-                            if (which == categories.lastIndex) {
-                                startActivity(Intent(this@AddEntry, AddCategory::class.java))
-                            } else {
-                                categoryTextView.text = categories[which]
-                                errorText.visibility = TextView.GONE
+                        val categories = catSnapshot.children.mapNotNull {
+                            it.child("name").getValue(String::class.java)
+                        }.toMutableList()
+
+                        categories.add("Add Category")
+
+                        runOnUiThread {
+                            val builder = AlertDialog.Builder(this@AddEntry)
+                            builder.setTitle("Select Category")
+                            builder.setItems(categories.toTypedArray()) { _, which ->
+                                if (which == categories.lastIndex) {
+                                    startActivity(Intent(this@AddEntry, AddCategory::class.java))
+                                } else {
+                                    categoryTextView.text = categories[which]
+                                    errorText.visibility = TextView.GONE
+                                }
                             }
+                            builder.show()
                         }
-                        builder.show()
                     }
+
 
                 } catch (e: Exception) {
                     showError(errorText, "Failed to load categories.")

@@ -44,23 +44,7 @@ class AddCategory : AppCompatActivity() {
         imagePickerContainer = findViewById(R.id.imagePickerContainer)
 
         val uid = getSharedPreferences("APP_PREFS", MODE_PRIVATE).getString("uid", "") ?: ""
-        val userRootRef = FirebaseDatabase.getInstance().getReference("User")
-
-        userRootRef.orderByChild("uid").equalTo(uid)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        val userKey = snapshot.children.first().key ?: return
-                        dbRef = userRootRef.child(userKey).child("category")
-                    } else {
-                        Toast.makeText(this@AddCategory, "User not found in DB", Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@AddCategory, "DB error: ${error.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
+        dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("categories")
 
 
         imagePickerContainer.setOnClickListener {
@@ -81,42 +65,6 @@ class AddCategory : AppCompatActivity() {
                 else -> checkIfCategoryExists(categoryName, imageUrl, budgetGoal)
             }
         }
-        /*
-
-        // Footer buttons setup
-        val homeButton = findViewById<ImageButton>(R.id.footerHome)
-        val calendarButton = findViewById<ImageButton>(R.id.footerCalender)
-        val addEntryButton = findViewById<ImageButton>(R.id.footerAddCategory)
-        val budgetButton = findViewById<ImageButton>(R.id.footerBudget)
-
-        homeButton.setOnClickListener {
-            val intent = Intent(this, Dashboard::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        addEntryButton.setOnClickListener {
-            val intent = Intent(this, AddCategory::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        calendarButton.setOnClickListener {
-            val intent = Intent(this, EntryCalender::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        budgetButton.setOnClickListener {
-            val intent = Intent(this, SetMonthyBudget::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
-         */
 
     }
 
