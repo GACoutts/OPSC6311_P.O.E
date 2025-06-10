@@ -22,6 +22,12 @@ class Settings : AppCompatActivity() {
             finish()
         }
 
+        val settingsIcon = findViewById<LinearLayout>(R.id.achievementsSection)
+        settingsIcon.setOnClickListener {
+            val intent = Intent(this, Achievements::class.java)
+            startActivity(intent)
+        }
+
         val closeButton = findViewById<ImageView>(R.id.closeButton)
         closeButton.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
