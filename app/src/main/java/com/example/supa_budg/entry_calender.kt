@@ -3,13 +3,15 @@ package com.example.supa_budg
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.supa_budg.data.Entry
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import java.time.Instant
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -25,11 +27,15 @@ class EntryCalender : AppCompatActivity() {
     private lateinit var showingDateText: TextView
 
     private lateinit var dbRef: DatabaseReference
-    private val uid get() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    private val uid get() = getSharedPreferences("APP_PREFS", MODE_PRIVATE)
+        .getString("uid", null)
 
     private var selectedCategory: String? = null
     private var selectedStartDate: String? = null
     private var selectedEndDate: String? = null
+
+    // Flag to control if date range filter is active
+    private var isDateRangeFilterActive = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,11 +47,14 @@ class EntryCalender : AppCompatActivity() {
         totalText = findViewById(R.id.totalValue)
         showingDateText = findViewById(R.id.showingResultsDate)
 
-        dbRef = FirebaseDatabase.getInstance().getReference("User").child(uid).child("Entry")
+        dbRef = FirebaseDatabase.getInstance().getReference("User").child(uid.toString()).child("Entry")
 
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
-            loadEntriesForDate(selectedDate)
+            // Only load single date entries if no date range filter is active
+            if (!isDateRangeFilterActive) {
+                val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
+                loadEntriesForDate(selectedDate)
+            }
         }
 
         findViewById<Button>(R.id.openModalButton).setOnClickListener {
@@ -53,6 +62,11 @@ class EntryCalender : AppCompatActivity() {
         }
 
         setupFooter()
+
+        // Load today's entries on startup by default
+        if (!isDateRangeFilterActive) {
+            loadEntriesForDate(LocalDate.now())
+        }
     }
 
     private fun loadEntriesForDate(date: LocalDate) {
@@ -65,12 +79,15 @@ class EntryCalender : AppCompatActivity() {
                     val entry = child.getValue(Entry::class.java) ?: continue
 
                     val entryDate = try {
-                        Instant.parse(entry.date.toString()).atZone(ZoneId.systemDefault()).toLocalDate()
+                        LocalDateTime.parse(entry.date.toString())
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
                     } catch (e: Exception) {
                         continue
                     }
 
                     val matchesCategory = selectedCategory == null || selectedCategory == entry.categoryid
+
                     if (entryDate == date && matchesCategory) {
                         if (entry.isExpense) {
                             expense += entry.amount
@@ -98,24 +115,36 @@ class EntryCalender : AppCompatActivity() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_graph_settings, null)
         val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
 
-        // Load categories from Firebase
-        val catRef = FirebaseDatabase.getInstance().getReference("User").child(uid).child("Category")
-        catRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val categoryNames = mutableListOf<String>()
-                for (child in snapshot.children) {
-                    val name = child.child("name").getValue(String::class.java)
-                    name?.let { categoryNames.add(it) }
-                }
+        lifecycleScope.launch {
+            try {
+                val catRef = FirebaseDatabase.getInstance()
+                    .getReference("User")
+                    .child(uid.toString())
+                    .child("Category")
+
+                val snapshot = catRef.get().await()
+
+                val categoryNames = snapshot.children.mapNotNull {
+                    it.child("name").getValue(String::class.java)
+                }.toMutableList()
+
+                Log.d("categoryNames", categoryNames.toString())
+
                 categoryNames.add("Add Category")
 
-                val adapter = ArrayAdapter(this@EntryCalender, android.R.layout.simple_spinner_item, categoryNames)
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                categorySpinner.adapter = adapter
+                runOnUiThread {
+                    val adapter = ArrayAdapter(
+                        this@EntryCalender,
+                        android.R.layout.simple_spinner_item,
+                        categoryNames
+                    )
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    categorySpinner.adapter = adapter
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@EntryCalender, "Failed to load categories.", Toast.LENGTH_SHORT).show()
             }
-
-            override fun onCancelled(error: DatabaseError) {}
-        })
+        }
 
         dialogView.findViewById<Button>(R.id.dateRangeButton).setOnClickListener {
             showDateRangePicker()
@@ -129,7 +158,12 @@ class EntryCalender : AppCompatActivity() {
                 if (selected != "Add Category") {
                     selectedCategory = selected
                     if (selectedStartDate != null && selectedEndDate != null) {
+                        isDateRangeFilterActive = true
                         applyDateRangeFilter()
+                    } else {
+                        // No date range selected, so disable filter and reload today or selected date
+                        isDateRangeFilterActive = false
+                        loadEntriesForDate(LocalDate.now())
                     }
                 } else {
                     startActivity(Intent(this, AddCategory::class.java))
@@ -174,20 +208,34 @@ class EntryCalender : AppCompatActivity() {
                 for (child in snapshot.children) {
                     val entry = child.getValue(Entry::class.java) ?: continue
 
+                    Log.d("EntryCalender", "Raw entry: $entry")
+
                     val entryDate = try {
-                        Instant.parse(entry.date.toString()).atZone(ZoneId.systemDefault()).toLocalDateTime()
+                        LocalDateTime.parse(entry.date.toString())
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime()
                     } catch (e: Exception) {
+                        Log.e("EntryCalender", "Invalid date format for entry: ${entry.date}", e)
                         continue
                     }
 
+                    Log.d("EntryCalender", "Parsed entryDate: $entryDate")
+
                     val matchesCategory = selectedCategory == null || selectedCategory == entry.categoryid
+
+                    Log.d("EntryCalender", "Category: ${entry.categoryid}, selectedCategory: $selectedCategory, matches: $matchesCategory")
+                    Log.d("EntryCalender", "Checking date: $entryDate isAfter ${start.minusSeconds(1)} && isBefore $end")
 
                     if (entryDate.isAfter(start.minusSeconds(1)) && entryDate.isBefore(end) && matchesCategory) {
                         if (entry.isExpense) {
                             expense += entry.amount
+                            Log.d("EntryCalender", "Added expense: ${entry.amount}, Total expense: $expense")
                         } else {
                             income += entry.amount
+                            Log.d("EntryCalender", "Added income: ${entry.amount}, Total income: $income")
                         }
+                    } else {
+                        Log.d("EntryCalender", "Entry filtered out (did not match date range or category)")
                     }
                 }
 
