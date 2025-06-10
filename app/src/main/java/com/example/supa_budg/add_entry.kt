@@ -108,15 +108,27 @@ class AddEntry : AppCompatActivity() {
                     val categorySnapshot = dbRef.child("Category").get().await()
 
                     if (!categorySnapshot.exists()) {
+                        showError(errorText, "No categories found.")
+                        return@launch
+                    }
+
+                    // Find category node where name == selectedCategoryName
+                    val matchingCategory = categorySnapshot.children.firstOrNull { snapshot ->
+                        val name = snapshot.child("name").getValue(String::class.java)
+                        name == selectedCategoryName
+                    }
+
+                    if (matchingCategory == null) {
                         showError(errorText, "Selected category not found.")
                         return@launch
                     }
 
-                    val categoryId = categorySnapshot.children.first().key ?: ""
+                    val categoryId = matchingCategory.key ?: ""
 
                     val entryId = dbRef.child("Entry").push().key ?: return@launch
+
+                    // Format the date properly, you might want to use selectedDate here
                     val entryDate = LocalDateTime.now().toString()
-                        //selectedDate.toInstant().toString()
 
                     val newEntry = Entry(
                         entryId = entryId,
@@ -138,6 +150,7 @@ class AddEntry : AppCompatActivity() {
                     showError(errorText, "Error: ${e.message}")
                 }
             }
+
         }
 
         categoryTextView.setOnClickListener {
